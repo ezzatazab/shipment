@@ -1,0 +1,23 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Shipment Status",
+  "modified": "2025-10-03 15:25:24.930201",
+  "name": "Export",
+  "status_name": "Export"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Shipment Status",
+  "modified": "2025-10-03 15:25:18.237175",
+  "name": "Transit",
+  "status_name": "Transit"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Shipment Status",
+  "modified": "2025-10-03 15:25:30.995506",
+  "name": "Import",
+  "status_name": "Import"
+ }
+]

@@ -1,0 +1,152 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"pfO_4W_WC-\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shipment\",\"col\":3}},{\"id\":\"sCDocv-u9R\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Shipment Settings\",\"col\":3}},{\"id\":\"gXjFj-4MOq\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Ports\",\"col\":3}},{\"id\":\"9cgdg9EV-h\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"7n5YFwnoi6\",\"type\":\"card\",\"data\":{\"card_name\":\"Setting\",\"col\":4}},{\"id\":\"hD8KFILTK7\",\"type\":\"card\",\"data\":{\"card_name\":\"Transactions\",\"col\":4}}]",
+ "creation": "2025-10-03 20:53:20.438638",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "stock",
+ "idx": 0,
+ "indicator_color": "",
+ "is_hidden": 0,
+ "label": "Shipping",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Transactions",
+   "link_count": 2,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Shipment Template",
+   "link_count": 0,
+   "link_to": "Shipment Template",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Shipment",
+   "link_count": 0,
+   "link_to": "Customs Shipment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Setting",
+   "link_count": 6,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Ports",
+   "link_count": 0,
+   "link_to": "Ports",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Port Location",
+   "link_count": 0,
+   "link_to": "Port Location",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Type of Shipping",
+   "link_count": 0,
+   "link_to": "Type of Shipping",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Shipment Status",
+   "link_count": 0,
+   "link_to": "Shipment Status",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Shipping Status",
+   "link_count": 0,
+   "link_to": "Shipping Status",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Shipment Settings",
+   "link_count": 0,
+   "link_to": "Shipment Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2025-11-12 11:45:54.665269",
+ "modified_by": "Administrator",
+ "module": "shippment",
+ "name": "Shipping",
+ "number_cards": [],
+ "owner": "ezzat.a@zetix.cloud",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 11.0,
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Shipment Settings",
+   "link_to": "Shipment Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Shipment",
+   "link_to": "Customs Shipment",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Pink",
+   "doc_view": "List",
+   "label": "Ports",
+   "link_to": "Ports",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Shipping"
+}

@@ -1,0 +1,425 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-10-03 16:28:16.021412",
+ "default_view": "List",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "engine": "InnoDB",
+ "field_order": [
+  "general_tab",
+  "general_section",
+  "customer",
+  "customer_name",
+  "type_of_shipping",
+  "shipping_type",
+  "port",
+  "port_location",
+  "policy_number",
+  "policy_date",
+  "agent_name",
+  "column_break_5",
+  "naming_series",
+  "status",
+  "date",
+  "shipment_status",
+  "expected_arrival_date",
+  "actual_arrival_date",
+  "special_sections",
+  "special_sections_remarks",
+  "transportation",
+  "section_break_ckfy",
+  "beneficiary",
+  "column_break_tohn",
+  "beneficiary_name",
+  "section_break0",
+  "remarks",
+  "section_break_zxbl",
+  "shipment_missions",
+  "section_break_srft",
+  "customs_declaration",
+  "delivery_permit_number",
+  "column_break_vgce",
+  "customs_declaration_date",
+  "delivery_permit_date",
+  "info_section",
+  "shipment_type",
+  "column_break_kima",
+  "truck_type",
+  "vessel_details_section",
+  "truck_details",
+  "shipment_parcel",
+  "vessel_details",
+  "customer_details",
+  "sales_order",
+  "column_break_moho",
+  "sales_invoice",
+  "section_break_hwlu",
+  "status_logs",
+  "attachments_tab",
+  "cs_attachments",
+  "connections_tab"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "no_copy": 1,
+   "options": "SHPT-.####",
+   "print_hide": 1,
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "oldfieldname": "status",
+   "oldfieldtype": "Select",
+   "options": "Shipping Status",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_details",
+   "fieldtype": "Section Break",
+   "oldfieldtype": "Section Break",
+   "options": "fa fa-user"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_global_search": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "oldfieldname": "customer",
+   "oldfieldtype": "Link",
+   "options": "Customer",
+   "print_hide": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order"
+  },
+  {
+   "fieldname": "section_break0",
+   "fieldtype": "Section Break",
+   "oldfieldtype": "Section Break",
+   "options": "fa fa-list"
+  },
+  {
+   "fieldname": "type_of_shipping",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Type of Shipping",
+   "options": "Type of Shipping",
+   "reqd": 1
+  },
+  {
+   "fieldname": "port",
+   "fieldtype": "Link",
+   "label": "Port",
+   "options": "Ports",
+   "reqd": 1
+  },
+  {
+   "fieldname": "shipment_status",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Shipment Status",
+   "options": "Shipment Status"
+  },
+  {
+   "fieldname": "expected_arrival_date",
+   "fieldtype": "Date",
+   "label": "Expected Arrival Date"
+  },
+  {
+   "fieldname": "general_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_srft",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_vgce",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.shipping_type == \"Sea Freight\";",
+   "fieldname": "agent_name",
+   "fieldtype": "Data",
+   "label": "Agent Name"
+  },
+  {
+   "depends_on": "eval:doc.shipping_type == \"Sea Freight\";",
+   "fieldname": "actual_arrival_date",
+   "fieldtype": "Date",
+   "label": "Actual Arrival Date"
+  },
+  {
+   "fetch_from": "type_of_shipping.shipping_type",
+   "fieldname": "shipping_type",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Shipping Type",
+   "options": "\nSea Freight\nLand Freight\nAir Freight\nDry Freight",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_kima",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customs_declaration",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customs Declaration",
+   "mandatory_depends_on": "eval:in_list([\"Transaction Submitted\", \"Fully Released\"], doc.status);"
+  },
+  {
+   "fieldname": "customs_declaration_date",
+   "fieldtype": "Date",
+   "label": "Customs Declaration Date",
+   "mandatory_depends_on": "eval:in_list([\"Transaction Submitted\", \"Fully Released\"], doc.status);"
+  },
+  {
+   "fieldname": "policy_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Policy Number",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "policy_date",
+   "fieldtype": "Date",
+   "label": "Policy Date"
+  },
+  {
+   "fieldname": "shipment_type",
+   "fieldtype": "Select",
+   "label": "Shipment Type",
+   "options": "\nTruck\nContainer\nParcel"
+  },
+  {
+   "fieldname": "info_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval:doc.shipment_type == \"Truck\";",
+   "fieldname": "truck_type",
+   "fieldtype": "Data",
+   "label": "Truck Type"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "vessel_details_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval:doc.shipment_type == \"Container\";",
+   "fieldname": "vessel_details",
+   "fieldtype": "Table",
+   "label": "Vessel Details",
+   "options": "Shipment Vessel Detail"
+  },
+  {
+   "default": "0",
+   "fieldname": "special_sections",
+   "fieldtype": "Check",
+   "label": "Special Sections"
+  },
+  {
+   "default": "0",
+   "fieldname": "transportation",
+   "fieldtype": "Check",
+   "label": "Transportation"
+  },
+  {
+   "fieldname": "connections_tab",
+   "fieldtype": "Tab Break",
+   "label": "Connections",
+   "show_dashboard": 1
+  },
+  {
+   "fieldname": "general_tab",
+   "fieldtype": "Tab Break",
+   "label": "General"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_hwlu",
+   "fieldtype": "Section Break",
+   "label": "Status Logs"
+  },
+  {
+   "fieldname": "status_logs",
+   "fieldtype": "Table",
+   "label": "Status Logs",
+   "no_copy": 1,
+   "options": "Customs Shipment Status Log"
+  },
+  {
+   "fieldname": "port_location",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Port Location",
+   "options": "Port Location"
+  },
+  {
+   "fieldname": "delivery_permit_number",
+   "fieldtype": "Data",
+   "label": "Delivery Permit Number",
+   "mandatory_depends_on": "eval:doc.status == \"Fully Released\";"
+  },
+  {
+   "fieldname": "delivery_permit_date",
+   "fieldtype": "Date",
+   "label": "Delivery Permit Date",
+   "mandatory_depends_on": "eval:doc.status == \"Fully Released\";"
+  },
+  {
+   "depends_on": "eval:doc.shipment_type == \"Parcel\";",
+   "fieldname": "shipment_parcel",
+   "fieldtype": "Table",
+   "label": "Shipment Parcel",
+   "options": "Shipment Parcel"
+  },
+  {
+   "depends_on": "special_sections",
+   "fieldname": "special_sections_remarks",
+   "fieldtype": "Data",
+   "label": "Special Sections Remarks"
+  },
+  {
+   "fieldname": "section_break_zxbl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "shipment_missions",
+   "fieldtype": "Table",
+   "label": "Shipment Missions",
+   "options": "Customs Shipment Mission Detail"
+  },
+  {
+   "fetch_from": "customer.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_moho",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "fieldname": "attachments_tab",
+   "fieldtype": "Tab Break",
+   "label": "Attachments"
+  },
+  {
+   "fieldname": "cs_attachments",
+   "fieldtype": "Table",
+   "label": "Attachments",
+   "options": "Customs Shipment Attachment"
+  },
+  {
+   "depends_on": "eval:doc.shipment_type == \"Truck\";",
+   "fieldname": "truck_details",
+   "fieldtype": "Table",
+   "label": "Truck Details",
+   "options": "Shipment Truck Detail"
+  },
+  {
+   "fieldname": "section_break_ckfy",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "beneficiary",
+   "fieldtype": "Link",
+   "label": "Beneficiary",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "column_break_tohn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "beneficiary.customer_name",
+   "fieldname": "beneficiary_name",
+   "fieldtype": "Data",
+   "label": "Beneficiary Name",
+   "read_only": 1
+  }
+ ],
+ "icon": "fa fa-puzzle-piece",
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "max_attachments": 25,
+ "modified": "2026-01-27 10:44:42.131244",
+ "modified_by": "Administrator",
+ "module": "shippment",
+ "name": "Customs Shipment",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "customer",
+ "show_name_in_global_search": 1,
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "timeline_field": "customer",
+ "title_field": "policy_number",
+ "track_changes": 1,
+ "track_seen": 1,
+ "translated_doctype": 1
+}

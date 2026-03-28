@@ -1,0 +1,34 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Type of Shipping",
+  "modified": "2025-10-03 17:54:00.928878",
+  "name": "Air Freight",
+  "shipping_type": "Air Freight",
+  "type_of_shipping": "Air Freight"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Type of Shipping",
+  "modified": "2025-10-29 00:54:44.630768",
+  "name": "Dry Freight",
+  "shipping_type": "Dry Freight",
+  "type_of_shipping": "Dry Freight"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Type of Shipping",
+  "modified": "2025-10-03 17:53:52.958064",
+  "name": "Land Freight",
+  "shipping_type": "Land Freight",
+  "type_of_shipping": "Land Freight"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Type of Shipping",
+  "modified": "2025-10-03 17:54:06.104231",
+  "name": "Sea Freight",
+  "shipping_type": "Sea Freight",
+  "type_of_shipping": "Sea Freight"
+ }
+]
