@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-01-12 21:16:20.084924",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "truck_type",
+  "truck_name",
+  "column_break_yvdd",
+  "model"
+ ],
+ "fields": [
+  {
+   "fieldname": "column_break_yvdd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "truck_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Truck Type"
+  },
+  {
+   "fieldname": "truck_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Truck Name"
+  },
+  {
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Model"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-01-12 21:18:10.981795",
+ "modified_by": "Administrator",
+ "module": "shippment",
+ "name": "Shipment Truck Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

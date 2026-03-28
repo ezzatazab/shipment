@@ -1,0 +1,62 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-11-02 23:43:10.868217",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "default_supplier",
+  "column_break_gcsp",
+  "shipment_mission",
+  "shipment_service"
+ ],
+ "fields": [
+  {
+   "fieldname": "shipment_mission",
+   "fieldtype": "Link",
+   "label": "Shipment Mission",
+   "options": "Item"
+  },
+  {
+   "fieldname": "shipment_service",
+   "fieldtype": "Link",
+   "label": "Shipment Service",
+   "options": "Item"
+  },
+  {
+   "fieldname": "column_break_gcsp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_supplier",
+   "fieldtype": "Link",
+   "label": "Default Supplier",
+   "options": "Supplier"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-11-28 21:35:09.450294",
+ "modified_by": "Administrator",
+ "module": "shippment",
+ "name": "Shipment Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
