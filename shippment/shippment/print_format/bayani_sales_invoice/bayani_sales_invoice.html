@@ -1,0 +1,465 @@
+{#- Bayani Sales Invoice — same design as مرتجع; title depends on is_return / is_debit_note -#}
+{% macro fmt_date(d) -%}
+{%- if d -%}
+{%- set g = frappe.utils.getdate(d) -%}
+{{- "%04d/%02d/%02d" | format(g.year, g.month, g.day) -}}
+{%- endif -%}
+{%- endmacro %}
+
+{% macro hijri_slash(d) -%}
+{%- if d -%}
+{%- set g = frappe.utils.getdate(d) -%}
+{%- set jd1 = ((1461 * (g.year + 4800 + ((g.month - 14) / 12) | int)) / 4) | int -%}
+{%- set jd2 = ((367 * (g.month - 2 - 12 * (((g.month - 14) / 12) | int))) / 12) | int -%}
+{%- set jd3 = ((3 * ((((g.year + 4900 + ((g.month - 14) / 12) | int) / 100) | int))) / 4) | int -%}
+{%- set jd = jd1 + jd2 - jd3 + g.day - 32075 -%}
+{%- set l0 = jd - 1948440 + 10632 -%}
+{%- set n = ((l0 - 1) / 10631) | int -%}
+{%- set l1 = l0 - 10631 * n + 354 -%}
+{%- set j = ((((10985 - l1) / 5316) | int) * (((50 * l1) / 17719) | int)) + ((((l1 / 5670) | int) * (((43 * l1) / 15238) | int))) -%}
+{%- set l2 = l1 - ((((30 - j) / 15) | int) * (((17719 * j) / 50) | int)) - ((((j / 16) | int) * (((15238 * j) / 43) | int))) + 29 -%}
+{%- set h_month = ((24 * l2) / 709) | int -%}
+{%- set h_day = l2 - (((709 * h_month) / 24) | int) -%}
+{%- set h_year = 30 * n + j - 30 -%}
+{{- "%04d/%02d/%02d" | format(h_year, h_month, h_day) -}}
+{%- endif -%}
+{%- endmacro %}
+
+{#- Customs Shipment grouping -#}
+{% set cs_keys = [] %}
+{% for item in doc.items %}
+	{% set key = item.customs_shipment if item.customs_shipment else ("__loose_" ~ item.idx) %}
+	{% if key not in cs_keys %}
+		{% if cs_keys.append(key) %}{% endif %}
+	{% endif %}
+{% endfor %}
+
+{#- Item wise tax detail -#}
+{% set tax_map = {} %}
+{% if doc.taxes and doc.taxes[0].item_wise_tax_detail %}
+	{% set tax_map = json.loads(doc.taxes[0].item_wise_tax_detail) %}
+{% endif %}
+
+{#- QR Code -#}
+{% set qr_src = namespace(url="") %}
+{% set files = frappe.get_all("File", filters={"attached_to_doctype": doc.doctype, "attached_to_name": doc.name}, fields=["file_url", "file_name"]) %}
+{% for f in files %}
+	{% set fname = (f.file_name or "") | lower %}
+	{% set furl = (f.file_url or "") | lower %}
+	{% if fname.endswith(".png") or fname.endswith(".jpg") or fname.endswith(".jpeg") or fname.endswith(".svg") or fname.endswith(".webp") or furl.endswith(".png") or furl.endswith(".jpg") %}
+		{% if "qr" in fname %}
+			{% set qr_src.url = f.file_url %}
+		{% elif not qr_src.url %}
+			{% set qr_src.url = f.file_url %}
+		{% endif %}
+	{% endif %}
+{% endfor %}
+{% if not qr_src.url %}
+	{% set siaf_name = frappe.db.get_value("Sales Invoice Additional Fields", {"sales_invoice": doc.name}, "name") %}
+	{% if siaf_name %}
+		{% set siaf = frappe.get_doc("Sales Invoice Additional Fields", siaf_name) %}
+		{% if siaf.qr_image_src %}
+			{% set qr_src.url = siaf.qr_image_src %}
+		{% endif %}
+	{% endif %}
+{% endif %}
+
+{#- Bank Account -#}
+{% set bank = namespace(name="", account="", iban="") %}
+{% set banks = frappe.get_all("Bank Account", filters={"company": doc.company, "disabled": 0}, fields=["account_name", "bank", "bank_account_no", "iban", "is_default", "is_company_account"]) %}
+{% for b in banks %}
+	{% if (b.is_company_account or b.is_default or not bank.name) %}
+		{% set bank.name = b.bank or b.account_name or "Saudi National Bank" %}
+		{% set bank.account = b.bank_account_no or bank.account %}
+		{% set bank.iban = b.iban or bank.iban %}
+	{% endif %}
+{% endfor %}
+
+{#- Customer Address & Details -#}
+{% set customer_vat = doc.tax_id or (frappe.db.get_value("Customer", doc.customer, "tax_id") if doc.customer else "") %}
+{% set addr = namespace(line1="", city_country="", zip="", box="") %}
+{% if doc.customer_address %}
+	{% set address_doc = frappe.get_doc("Address", doc.customer_address) %}
+	{% set addr.line1 = address_doc.address_line1 or "" %}
+	{% set addr.city_country = (address_doc.city or "") ~ " " ~ (address_doc.country or "") %}
+	{% set addr.zip = address_doc.pincode or "" %}
+	{% set addr.box = address_doc.email_id or "" %}
+{% endif %}
+
+<style>
+	@media print {
+		@page { size: A4 portrait; margin: 6mm 6mm 6mm 6mm; }
+		body { margin: 0; padding: 0; }
+	}
+	.jv-container {
+		font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+		color: #000;
+		font-size: 10px;
+		line-height: 1.25;
+		width: 100%;
+		background: #fff;
+	}
+
+	/* Header Section */
+	.jv-header-table { width: 100%; margin-bottom: 4px; table-layout: fixed; }
+	.jv-header-table td { vertical-align: top; }
+	.jv-hdr-left { text-align: left; width: 38%; font-size: 9px; line-height: 1.3; }
+	.jv-hdr-center { text-align: center; width: 24%; }
+	.jv-hdr-right { text-align: right; width: 38%; font-size: 9px; line-height: 1.3; direction: rtl; }
+	.jv-company-name { font-weight: 700; font-size: 11px; margin-bottom: 2px; }
+	.jv-logo-img { max-width: 120px; max-height: 75px; object-fit: contain; }
+
+	/* Title Banner */
+	.jv-title-bar {
+		border-top: 1.5px solid #000;
+		border-bottom: 1.5px solid #000;
+		text-align: center;
+		font-size: 16px;
+		font-weight: bold;
+		padding: 3px 0;
+		margin: 6px 0 8px 0;
+		letter-spacing: 0.5px;
+	}
+
+	/* QR Code */
+	.jv-qr-wrap { text-align: center; margin-bottom: 8px; }
+	.jv-qr-wrap img { width: 90px; height: 90px; object-fit: contain; }
+
+	/* Meta & Client Boxes */
+	.jv-meta-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; table-layout: fixed; }
+	.jv-meta-table td { vertical-align: top; padding: 0; }
+	.jv-box { border: 1px solid #000; font-size: 9.5px; }
+	.jv-box-row { display: table; width: 100%; border-bottom: 1px solid #ddd; }
+	.jv-box-row:last-child { border-bottom: none; }
+	.jv-box-lbl-en { display: table-cell; width: 30%; padding: 3px 5px; font-weight: 700; text-align: left; }
+	.jv-box-val { display: table-cell; padding: 3px 5px; text-align: center; font-weight: 600; }
+	.jv-box-lbl-ar { display: table-cell; width: 30%; padding: 3px 5px; font-weight: 700; text-align: right; direction: rtl; }
+
+	/* Items Table */
+	.jv-items-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 8.5px; direction: rtl; }
+	.jv-items-table th, .jv-items-table td { border: 1px solid #000; padding: 4px 3px; text-align: center; vertical-align: middle; }
+	.jv-items-table th { background: #f0f0f0; font-weight: bold; font-size: 8.5px; line-height: 1.1; }
+	.jv-items-table td.num { text-align: right; white-space: nowrap; direction: ltr; }
+
+	/* Totals Section */
+	.jv-totals-wrap { width: 100%; margin-bottom: 10px; }
+	.jv-totals-table { float: right; border-collapse: collapse; font-size: 10px; direction: rtl; width: auto; }
+	.jv-totals-table td { padding: 3px 8px; text-align: right; }
+	.jv-totals-lbl { font-weight: bold; padding-right: 15px !important; }
+	.jv-totals-val { font-weight: bold; min-width: 90px; text-align: left !important; direction: ltr; }
+	.jv-grand-box { background: #dcdcdc; border: 1px solid #000; padding: 4px 10px; font-weight: bold; }
+
+	/* Bank Box */
+	.jv-bank-container { border: 1px solid #000; margin-bottom: 12px; clear: both; }
+	.jv-bank-header { background: #dcdcdc; text-align: center; font-weight: bold; padding: 4px; border-bottom: 1px solid #000; font-size: 10px; }
+	.jv-bank-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+	.jv-bank-table th, .jv-bank-table td { border: 1px solid #000; padding: 4px 6px; text-align: center; }
+	.jv-bank-table th { background: #f0f0f0; font-weight: bold; }
+
+	/* Signatures */
+	.jv-signs-table { width: 100%; margin-bottom: 14px; table-layout: fixed; }
+	.jv-signs-table td { vertical-align: top; font-size: 10px; font-weight: bold; }
+	.jv-dotted-line { border-bottom: 1px dotted #000; margin-top: 25px; width: 80%; }
+
+	/* Notes */
+	.jv-notes-table { width: 100%; font-size: 8.5px; line-height: 1.35; margin-bottom: 15px; }
+	.jv-notes-left { text-align: left; width: 48%; vertical-align: top; }
+	.jv-notes-right { text-align: right; width: 50%; direction: rtl; vertical-align: top; }
+
+	/* Page Footer Bar */
+	.jv-footer-bar {
+		background: #e0e0e0;
+		border: 1px solid #b0b0b0;
+		padding: 3px 8px;
+		font-size: 8.5px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-top: 10px;
+	}
+</style>
+
+<div class="jv-container">
+	<!-- Company Header -->
+	<table class="jv-header-table">
+		<tr>
+			<td class="jv-hdr-left">
+				<div class="jv-company-name">Bayani company customs clearance </div>
+				7953 Khalid Bin Al Waleed Street - Al Sharafiya District - Jeddah. Unit Number: 5021 JEDDAH 22234 - 8569<br>
+				<strong>Tel:</strong> 126495995<br>
+				<strong>Email:</strong> info@byani.sa<br>
+				<strong>CR No:</strong> 4030290466<br>
+				<strong>VAT #:</strong> 310383507500003
+			</td>
+			<td class="jv-hdr-center">
+				{# Relative path — inlined as base64 during PDF generation #}
+				<img src="/files/pdfexoprtpages_last logo1-1488689453-3.png" class="jv-logo-img" alt="Company Logo">
+			</td>
+			<td class="jv-hdr-right">
+				<div class="jv-company-name">شركة بيانى للتخليص الجمركى</div>
+				7953 شارع خالد بن الويد - حي الشرفية رقم الوحدة: 5021 جدة 22234 – 8569<br>
+				<strong>تليفون:</strong> 126495995<br>
+				<strong>الإيميل:</strong> info@byani.sa<br>
+				<strong>سجل رقم:</strong> 4030290466<br>
+				<strong>رقم ض.:</strong> 310383507500003
+			</td>
+		</tr>
+	</table>
+
+	<!-- Title Bar: Credit / Debit / Tax Invoice -->
+	<div class="jv-title-bar">
+		{% if doc.is_return %}
+			Credit Note &nbsp;&nbsp;&nbsp;&nbsp; إشعار دائن
+		{% elif doc.is_debit_note %}
+			Debit Note &nbsp;&nbsp;&nbsp;&nbsp; إشعار مدين
+		{% else %}
+			Tax Invoice &nbsp;&nbsp;&nbsp;&nbsp; فاتورة ضريبية
+		{% endif %}
+	</div>
+
+	<!-- QR Code -->
+	{% if qr_src.url %}
+	<div class="jv-qr-wrap">
+		<img src="{{ qr_src.url }}" alt="QR Code">
+	</div>
+	{% endif %}
+
+	<!-- Meta & Customer Details Grid -->
+	<table class="jv-meta-table">
+		<tr>
+			<td style="width: 48%; padding-right: 6px;">
+				<div class="jv-box">
+					<div class="jv-box-row">
+						<div class="jv-box-lbl-en">Invoice Num</div>
+						<div class="jv-box-val">{{ doc.name }}</div>
+						<div class="jv-box-lbl-ar">رقم الفاتورة</div>
+					</div>
+					<div class="jv-box-row">
+						<div class="jv-box-lbl-en">DATE</div>
+						<div class="jv-box-val">
+							{{ fmt_date(doc.posting_date) }} &nbsp;
+							{% if doc.posting_date %}{{ hijri_slash(doc.posting_date) }}{% endif %}
+						</div>
+						<div class="jv-box-lbl-ar">التاريخ</div>
+					</div>
+					<div class="jv-box-row">
+						<div class="jv-box-lbl-en">Consignee</div>
+						<div class="jv-box-val">{{ doc.customer_name or doc.customer }}</div>
+						<div class="jv-box-lbl-ar">المرجع</div>
+					</div>
+					<div class="jv-box-row">
+						<div class="jv-box-lbl-en">Notes</div>
+						<div class="jv-box-val">{{ doc.remarks or "" }}</div>
+						<div class="jv-box-lbl-ar">ملاحظات</div>
+					</div>
+				</div>
+			</td>
+			<td style="width: 48%; padding-left: 6px;">
+				<div class="jv-box">
+					<div class="jv-box-row">
+						<div class="jv-box-lbl-en">Client</div>
+						<div class="jv-box-val">{{ doc.customer_name or doc.customer }}</div>
+						<div class="jv-box-lbl-ar">العميل</div>
+					</div>
+					<div class="jv-box-row">
+						<div class="jv-box-lbl-en">Address</div>
+						<div class="jv-box-val">{{ addr.line1 or "جدة" }}</div>
+						<div class="jv-box-lbl-ar">العنوان</div>
+					</div>
+					<div class="jv-box-row">
+						<div class="jv-box-lbl-en">City&Country</div>
+						<div class="jv-box-val">{{ addr.city_country or "جدة المملكة العربية السعودية" }}</div>
+						<div class="jv-box-lbl-ar">المدينة و الدولة</div>
+					</div>
+					<div class="jv-box-row">
+						<div class="jv-box-lbl-en">Client VAT</div>
+						<div class="jv-box-val">{{ customer_vat }}</div>
+						<div class="jv-box-lbl-ar">العميل ض.ق</div>
+					</div>
+					<div class="jv-box-row">
+						<div class="jv-box-lbl-en">ZIP</div>
+						<div class="jv-box-val">{{ addr.zip or "22234" }}</div>
+						<div class="jv-box-lbl-ar">الرمز</div>
+					</div>
+					<div class="jv-box-row">
+						<div class="jv-box-lbl-en">BOX</div>
+						<div class="jv-box-val">{{ addr.box }}</div>
+						<div class="jv-box-lbl-ar">ص.ب</div>
+					</div>
+					<div class="jv-box-row">
+						<div class="jv-box-lbl-en">CustomerReference</div>
+						<div class="jv-box-val">{{ doc.po_no or doc.remarks or "" }}</div>
+						<div class="jv-box-lbl-ar">مرجع العميل</div>
+					</div>
+				</div>
+			</td>
+		</tr>
+	</table>
+
+	<!-- Items Table (Right To Left Layout) -->
+	<table class="jv-items-table">
+		<thead>
+			<tr>
+				<th style="width: 25px;">م</th>
+				<th>رقم السند</th>
+				<th>تاريخ الدخول</th>
+				<th>تاريخ الخروج</th>
+				<th>رقم الحاوية</th>
+				<th>قيمة التخزين</th>
+				<th>التخزين الاضافى</th>
+				<th>خدمات غير ضريبيه</th>
+				<th>خدمات ضريبيه</th>
+				<th>ضريبة القيمه المضافة</th>
+				<th>الاجمالى</th>
+			</tr>
+		</thead>
+		<tbody>
+		{% for key in cs_keys %}
+			{% set row = namespace(
+				ref=key.replace("__loose_", "") if key.startswith("__loose_") else key,
+				entry="", exit="", container="",
+				storage=0, additional=0, taxable=0, nontax=0, vat=0, total=0
+			) %}
+			{% if not key.startswith("__loose_") and frappe.db.exists("Customs Shipment", key) %}
+				{% set cs = frappe.get_doc("Customs Shipment", key) %}
+				{% set row.ref = cs.name %}
+				{% set row.entry = cs.actual_arrival_date or cs.customs_declaration_date or cs.date or cs.expected_arrival_date %}
+				{% set row.exit = cs.delivery_permit_date %}
+				{% set vessels = [] %}
+				{% for v in cs.vessel_details or [] %}
+					{% if v.vessel_no %}{% if vessels.append(v.vessel_no) %}{% endif %}{% endif %}
+				{% endfor %}
+				{% set row.container = vessels | join(", ") if vessels else (cs.shipment_type or "") %}
+			{% endif %}
+
+			{% for item in doc.items %}
+				{% set item_key = item.customs_shipment if item.customs_shipment else ("__loose_" ~ item.idx) %}
+				{% if item_key == key %}
+					{% if key.startswith("__loose_") %}
+						{% set row.ref = item.item_code or item.item_name %}
+						{% if not row.container %}
+							{% set row.container = (item.description or item.item_name or "") | striptags %}
+						{% endif %}
+					{% endif %}
+					{% set amt = item.net_amount if item.net_amount is not none else item.amount %}
+					{% set item_tax = 0 %}
+					{% set code = item.item_code or item.item_name %}
+					{% if code and tax_map.get(code) %}
+						{% set vals = tax_map.get(code) %}
+						{% if vals is iterable and vals is not string and vals | length >= 2 %}
+							{% set item_tax = vals[1] %}
+						{% endif %}
+					{% endif %}
+					{% set name_txt = (item.item_name or "") ~ " " ~ (item.item_code or "") %}
+					{% set has_tax = item_tax > 0 or item.item_tax_template %}
+					{% if ("تخزين" in name_txt) and ("اضاف" not in name_txt) and ("تأخير" not in name_txt) and ("تمديد" not in name_txt) %}
+						{% set row.storage = row.storage + amt %}
+					{% elif ("تأخير" in name_txt) or ("تمديد" in name_txt) or ("اضاف" in name_txt) %}
+						{% set row.additional = row.additional + amt %}
+					{% elif has_tax %}
+						{% set row.taxable = row.taxable + amt %}
+					{% else %}
+						{% set row.nontax = row.nontax + amt %}
+					{% endif %}
+					{% set row.vat = row.vat + item_tax %}
+					{% set row.total = row.total + amt + item_tax %}
+				{% endif %}
+			{% endfor %}
+
+			<tr>
+				<td>{{ loop.index }}</td>
+				<td>{{ row.ref }}</td>
+				<td>{{ fmt_date(row.entry) }}</td>
+				<td>{{ fmt_date(row.exit) }}</td>
+				<td>{{ row.container }}</td>
+				<td class="num">{{ "%.2f" | format(row.storage) }}</td>
+				<td class="num">{{ "%.2f" | format(row.additional) }}</td>
+				<td class="num">{{ "%.2f" | format(row.nontax) }}</td>
+				<td class="num">{{ "%.2f" | format(row.taxable) }}</td>
+				<td class="num">{{ "%.2f" | format(row.vat) }}</td>
+				<td class="num"><strong>{{ "%.2f" | format(row.total) }}</strong></td>
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+
+	<!-- Invoice Totals Summary -->
+	<div class="jv-totals-wrap">
+		<table class="jv-totals-table">
+			<tr>
+				<td class="jv-totals-val">{{ "%.2f" | format(doc.net_total) }}</td>
+				<td class="jv-totals-lbl">الاجماالي قبل الضريبة</td>
+			</tr>
+			<tr>
+				<td class="jv-totals-val">{{ "%.2f" | format(doc.total_taxes_and_charges) }}</td>
+				<td class="jv-totals-lbl">الضريبة</td>
+			</tr>
+			<tr>
+				<td class="jv-totals-val jv-grand-box">{{ "%.2f" | format(doc.grand_total) }}</td>
+				<td class="jv-totals-lbl" style="vertical-align: middle;">الصافى</td>
+			</tr>
+		</table>
+		<div style="clear: both;"></div>
+	</div>
+
+	<!-- Bank Account Details Box -->
+	<div class="jv-bank-container">
+		<div class="jv-bank-header">
+			Bank Account Details &nbsp;&nbsp;&nbsp;&nbsp; تفاصيل الحسابات البنكية
+		</div>
+		<table class="jv-bank-table">
+			<thead>
+				<tr>
+					<th>Bank Name &nbsp; اسم البنك</th>
+					<th>Account # &nbsp; رقم الحساب</th>
+					<th>IBAN # &nbsp; رقم الايبان</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>{{ bank.name }}</td>
+					<td>{{ bank.account }}</td>
+					<td>{{ bank.iban }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<!-- Signatures -->
+	<table class="jv-signs-table">
+		<tr>
+			<td style="text-align: left; width: 50%;">
+				RECEIVED BY<br>
+				<span style="font-size: 11px;">المستلم</span>
+				<div class="jv-dotted-line"></div>
+			</td>
+			<td style="text-align: right; width: 50%; direction: rtl;">
+				FINANCE<br>
+				<span style="font-size: 11px;">المحاسبة</span>
+				<div class="jv-dotted-line" style="margin-right: 0; margin-left: auto;"></div>
+			</td>
+		</tr>
+	</table>
+
+	<!-- Notes & Conditions -->
+	<table class="jv-notes-table">
+		<tr>
+			<td class="jv-notes-left">
+				<strong>Official Charges as per receipts attached</strong><br>
+				<strong>Please verify the invoice and report discrepance if any</strong><br>
+				<strong>Withing 14 dayes from the date of receipt of the invoic</strong>
+			</td>
+			<td class="jv-notes-right">
+				<strong>1- الرسوم الرسمية وفق الفاتورة الاصلية المرفقة</strong><br>
+				<strong>2- يرجى التحقق من المبالغ الوراد بالفاتورة والاعتراض فى حالة ملاحظات خلال 14 يوم عدا ذلك تعتبر الفاتورة صحيحة وملزمة</strong>
+			</td>
+		</tr>
+	</table>
+
+	<!-- Page Bottom Footer -->
+	<div class="jv-footer-bar">
+		<div><strong>1/1</strong></div>
+		<div><strong>تاريخ الطباعة:</strong> {{ frappe.utils.nowdate() }} {{ frappe.utils.nowtime()[:5] }}</div>
+		<div><strong>المستخدم:</strong> {{ frappe.session.user.split('@')[0] | upper }}</div>
+	</div>
+</div>

@@ -1,0 +1,511 @@
+<!-- تقرير كشف حساب — Customer Statement print (John Resig JS template) -->
+<style>
+	.soa-wrap {
+		font-family: "Tahoma", "Arial", "DejaVu Sans", sans-serif;
+		font-size: 11px;
+		color: #111;
+		direction: rtl;
+		width: 100%;
+	}
+	.soa-header {
+		width: 100%;
+		border-collapse: collapse;
+		margin-bottom: 6px;
+	}
+	.soa-header td {
+		border: none !important;
+		vertical-align: middle;
+		padding: 2px 4px;
+	}
+	.soa-brand {
+		text-align: right;
+	}
+	.soa-logo img {
+		max-height: 72px;
+		max-width: 110px;
+		display: block;
+		margin: 0 auto 4px;
+	}
+	.soa-company-ar {
+		font-size: 12px;
+		font-weight: 700;
+		color: #1a4a8a;
+		line-height: 1.35;
+		text-align: center;
+	}
+	.soa-branch {
+		font-size: 11px;
+		text-align: center;
+		margin-top: 2px;
+	}
+	.soa-company-en {
+		font-size: 15px;
+		font-weight: 700;
+		text-align: left;
+		direction: ltr;
+	}
+	.soa-title-block {
+		text-align: center;
+	}
+	.soa-title {
+		font-size: 18px;
+		font-weight: 700;
+		text-decoration: underline;
+		margin: 0 0 6px;
+	}
+	.soa-dates {
+		font-size: 12px;
+		font-weight: 600;
+	}
+	.soa-account-bar {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 8px 0;
+		background: #d0d0d0;
+	}
+	.soa-account-bar td {
+		border: 1px solid #333;
+		padding: 6px 10px;
+		font-size: 12px;
+		font-weight: 700;
+	}
+	.soa-account-bar .acc-label {
+		width: 9%;
+		white-space: nowrap;
+		text-align: center;
+	}
+	.soa-account-bar .acc-no {
+		width: 16%;
+		direction: ltr;
+		text-align: left;
+	}
+	.soa-account-bar .acc-name {
+		text-align: center;
+	}
+	.soa-table {
+		width: 100%;
+		border-collapse: collapse;
+		direction: rtl;
+		margin-bottom: 6px;
+	}
+	.soa-table th,
+	.soa-table td {
+		border: 1px solid #000;
+		padding: 4px 5px;
+		font-size: 11px;
+		text-align: center;
+		vertical-align: middle;
+	}
+	.soa-table th {
+		background: #efefef;
+		font-weight: 700;
+	}
+	.soa-table .desc {
+		text-align: right;
+		padding-right: 8px;
+	}
+	.soa-table .num {
+		text-align: right;
+		direction: ltr;
+		white-space: nowrap;
+		font-variant-numeric: tabular-nums;
+	}
+	.soa-table .ref {
+		direction: ltr;
+	}
+	.soa-table tr.total-row td,
+	.soa-table tr.opening-row td {
+		background: #f5f5f5;
+		font-weight: 700;
+	}
+	.soa-words {
+		margin: 8px 0 12px;
+		font-size: 12px;
+		font-weight: 600;
+		text-align: right;
+	}
+	.soa-aging {
+		width: 100%;
+		border-collapse: collapse;
+		direction: rtl;
+		margin: 8px 0;
+	}
+	.soa-aging th,
+	.soa-aging td {
+		border: 1px solid #000;
+		padding: 5px 6px;
+		text-align: center;
+		font-size: 11px;
+	}
+	.soa-aging th {
+		background: #efefef;
+		font-weight: 700;
+	}
+	.soa-aging .side-title {
+		background: #efefef;
+		font-weight: 700;
+		width: 14%;
+	}
+	.soa-aging .num {
+		direction: ltr;
+		text-align: center;
+	}
+	.soa-grand {
+		width: 55%;
+		border-collapse: collapse;
+		direction: rtl;
+		margin: 8px 0 8px auto;
+	}
+	.soa-grand th,
+	.soa-grand td {
+		border: 1px solid #000;
+		padding: 5px 8px;
+		text-align: center;
+		font-size: 11px;
+		font-weight: 700;
+		background: #f5f5f5;
+	}
+	.soa-grand .num {
+		direction: ltr;
+		background: #fff;
+	}
+	.soa-footer-note {
+		margin-top: 16px;
+		font-size: 11px;
+		text-align: center;
+		line-height: 1.7;
+		color: #1a4a8a;
+	}
+	.soa-signs {
+		width: 100%;
+		border-collapse: collapse;
+		margin-top: 30px;
+	}
+	.soa-signs td {
+		border: none !important;
+		width: 33.33%;
+		text-align: center;
+		font-size: 12px;
+		font-weight: 700;
+		padding-top: 8px;
+	}
+	.soa-signs .line {
+		border-top: 1px solid #333;
+		width: 70%;
+		margin: 40px auto 8px;
+	}
+	@media print {
+		.soa-wrap,
+		.soa-account-bar td,
+		.soa-table th,
+		.soa-aging th,
+		.soa-grand th,
+		.soa-grand td {
+			-webkit-print-color-adjust: exact;
+			print-color-adjust: exact;
+		}
+	}
+</style>
+
+{%
+	var company = filters.company || "";
+	var party_name = filters.party_name || "";
+	if (!party_name && filters.party && filters.party.length) {
+		party_name = filters.party[0];
+	}
+
+	var account_no = "";
+	if (filters.account && filters.account.length) {
+		account_no = cstr(filters.account[0]);
+		var acc_parts = account_no.split(" - ");
+		if (acc_parts.length && /^\d/.test(acc_parts[0])) {
+			account_no = acc_parts[0];
+		}
+	}
+
+	var from_date = filters.from_date || "";
+	var to_date = filters.to_date || "";
+	var credit_limit = flt(filters.credit_limit);
+	var company_logo = filters.company_logo || "";
+	var base_url = (typeof frappe !== "undefined" && frappe.urllib) ? frappe.urllib.get_base_url() : "";
+
+	function fmt_num(v) {
+		if (v === null || v === undefined || v === "") return "0.00";
+		return format_number(flt(v), null, 2);
+	}
+
+	function fmt_date(d) {
+		if (!d) return "";
+		var s = cstr(d);
+		var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+		if (m) return m[3] + "-" + m[2] + "-" + m[1];
+		try { return frappe.datetime.str_to_user(d); } catch (e) { return s; }
+	}
+
+	function clean_label(acc) {
+		return cstr(acc || "").replace(/\x27/g, "");
+	}
+
+	function is_opening(row) {
+		var a = clean_label(row.account);
+		if (is_closing(row) || is_total(row)) return false;
+		return a === "Opening" || a === "افتتاحي" || a.indexOf("Opening") === 0;
+	}
+
+	function is_total(row) {
+		var a = clean_label(row.account);
+		return a === "Total" || a === "الاجمالي" || a === "الإجمالي" || a.indexOf("Total") === 0;
+	}
+
+	function is_closing(row) {
+		var a = clean_label(row.account);
+		return a.indexOf("Closing") >= 0 || a.indexOf("إغلاق") >= 0 || a.indexOf("اغلاق") >= 0 || a.indexOf("الإغلاق") >= 0;
+	}
+
+	function row_desc(row) {
+		if (!row.posting_date) {
+			if (is_opening(row)) return "رصيد افتتاحي Opening Balance";
+			return clean_label(row.account);
+		}
+		var parts = [];
+		if (row.remarks) {
+			parts.push(row.remarks);
+		} else {
+			if (row.voucher_type) parts.push(__(row.voucher_type));
+			if (row.bill_no) parts.push(row.bill_no);
+			else if (row.against) parts.push(row.against);
+		}
+		if (row.policy_number) parts.push(__("Policy") + ": " + row.policy_number);
+		if (row.customs_declaration) parts.push(__("Customs Declaration") + ": " + row.customs_declaration);
+		if (row.vehicle_info) parts.push(row.vehicle_info);
+		return parts.join(" — ") || cstr(row.voucher_no || "");
+	}
+
+	function branch_code(row) {
+		if (!row.cost_center) return "0001";
+		var cc = cstr(row.cost_center);
+		var m = cc.match(/(\d{3,})/);
+		return m ? m[1] : "0001";
+	}
+
+	var closing_balance = 0;
+	var total_debit = 0;
+	var total_credit = 0;
+	var aging = { "0_30": 0, "31_60": 0, "61_90": 0, "over_90": 0 };
+	var to_dt = null;
+	try { to_dt = frappe.datetime.str_to_obj(to_date); } catch (e) { to_dt = null; }
+
+	for (var i = 0; i < data.length; i++) {
+		var r = data[i];
+		if (!r) continue;
+
+		if (!r.posting_date && r.account) {
+			if (is_closing(r)) {
+				closing_balance = flt(r.balance);
+				total_debit = flt(r.debit);
+				total_credit = flt(r.credit);
+			} else if (is_total(r)) {
+				if (!total_debit && !total_credit) {
+					total_debit = flt(r.debit);
+					total_credit = flt(r.credit);
+				}
+			}
+			continue;
+		}
+
+		if (r.posting_date && flt(r.debit) > 0 && to_dt) {
+			var pdate = frappe.datetime.str_to_obj(r.posting_date);
+			var days = frappe.datetime.get_diff(to_dt, pdate);
+			var amt = flt(r.debit);
+			if (days <= 30) aging["0_30"] += amt;
+			else if (days <= 60) aging["31_60"] += amt;
+			else if (days <= 90) aging["61_90"] += amt;
+			else aging["over_90"] += amt;
+		}
+	}
+
+	if (!closing_balance && data.length) {
+		for (var j = data.length - 1; j >= 0; j--) {
+			if (data[j] && data[j].balance !== undefined && data[j].balance !== null) {
+				closing_balance = flt(data[j].balance);
+				break;
+			}
+		}
+	}
+
+	function ones_ar(n) {
+		var a = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة",
+			"عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
+		return a[n] || "";
+	}
+	function tens_ar(n) {
+		var a = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
+		return a[n] || "";
+	}
+	function below_hundred_ar(n) {
+		if (n < 20) return ones_ar(n);
+		var t = Math.floor(n / 10), o = n % 10;
+		if (!o) return tens_ar(t);
+		return ones_ar(o) + " و " + tens_ar(t);
+	}
+	function below_thousand_ar(n) {
+		if (n < 100) return below_hundred_ar(n);
+		var h = Math.floor(n / 100), rest = n % 100;
+		var hundreds = ["", "مائة", "مائتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
+		var s = hundreds[h] || "";
+		if (rest) s += " و " + below_hundred_ar(rest);
+		return s;
+	}
+	function number_to_words_ar(n) {
+		n = Math.floor(Math.abs(flt(n)));
+		if (n === 0) return "صفر";
+		if (n < 1000) return below_thousand_ar(n);
+		var thousands = Math.floor(n / 1000), rest = n % 1000;
+		var s = "";
+		if (thousands === 1) s = "ألف";
+		else if (thousands === 2) s = "ألفان";
+		else if (thousands >= 3 && thousands <= 10) s = below_hundred_ar(thousands) + " آلاف";
+		else s = below_thousand_ar(thousands) + " ألف";
+		if (rest) s += " و " + below_thousand_ar(rest);
+		return s;
+	}
+
+	var words = "فقط " + number_to_words_ar(Math.abs(closing_balance)) + " ريال سعودي لا غير";
+	var logo_src = company_logo ? (company_logo.indexOf("http") === 0 ? company_logo : (base_url + company_logo)) : "";
+%}
+
+<div class="soa-wrap">
+	<table class="soa-header">
+		<tr>
+			<td style="width: 26%;" class="soa-company-en">
+				{%= cstr(company) %}
+			</td>
+			<td style="width: 48%;" class="soa-title-block">
+				<div class="soa-title">تقرير كشف حساب</div>
+				<div class="soa-dates">
+					من تاريخ {%= fmt_date(from_date) %} الى تاريخ {%= fmt_date(to_date) %}
+				</div>
+			</td>
+			<td style="width: 26%;" class="soa-brand">
+				{% if (logo_src) { %}
+				<div class="soa-logo"><img src="{%= logo_src %}"></div>
+				{% } %}
+				<div class="soa-company-ar">{%= cstr(company) %}</div>
+				<div class="soa-branch">الفرع الرئيسي</div>
+			</td>
+		</tr>
+	</table>
+
+	<table class="soa-account-bar">
+		<tr>
+			<td class="acc-label">الحساب</td>
+			<td class="acc-no">{%= cstr(account_no) %}</td>
+			<td class="acc-name">{%= cstr(party_name) %}</td>
+		</tr>
+	</table>
+
+	<table class="soa-table">
+		<thead>
+			<tr>
+				<th style="width: 8%;">الفرع</th>
+				<th style="width: 14%;">الرقم</th>
+				<th style="width: 11%;">التاريخ</th>
+				<th style="width: 31%;">الوصف</th>
+				<th style="width: 12%;">مدين</th>
+				<th style="width: 12%;">دائن</th>
+				<th style="width: 12%;">الرصيد</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for (var i=0, l=data.length; i<l; i++) { %}
+				{% var row = data[i]; %}
+				{% if (row && (row.posting_date || (row.account && is_opening(row)))) { %}
+				{% if (row.posting_date) { %}
+				<tr>
+						<td>{%= branch_code(row) %}</td>
+						<td class="ref">{%= row.voucher_no || "" %}</td>
+						<td>{%= fmt_date(row.posting_date) %}</td>
+						<td class="desc">{%= row_desc(row) %}</td>
+						<td class="num">{%= fmt_num(row.debit) %}</td>
+						<td class="num">{%= fmt_num(row.credit) %}</td>
+						<td class="num">{%= fmt_num(row.balance) %}</td>
+				</tr>
+				{% } else { %}
+				<tr class="opening-row">
+						<td></td>
+						<td></td>
+						<td></td>
+						<td class="desc">{%= row_desc(row) %}</td>
+						<td class="num">{%= fmt_num(row.debit) %}</td>
+						<td class="num">{%= fmt_num(row.credit) %}</td>
+						<td class="num">{%= fmt_num(row.balance) %}</td>
+				</tr>
+				{% } %}
+				{% } %}
+			{% } %}
+			<tr class="total-row">
+				<td colspan="4" class="desc">اجمالي الحساب</td>
+				<td class="num">{%= fmt_num(total_debit) %}</td>
+				<td class="num">{%= fmt_num(total_credit) %}</td>
+				<td class="num">{%= fmt_num(closing_balance) %}</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<div class="soa-words">{%= words %}</div>
+
+	<table class="soa-aging">
+		<thead>
+			<tr>
+				<th class="side-title">ملخص أعمار الديون</th>
+				<th>الحد الائتماني</th>
+				<th>0 - 30</th>
+				<th>31 - 60</th>
+				<th>61 - 90</th>
+				<th>&gt; 90</th>
+				<th>أرصدة الحسابات</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td></td>
+				<td class="num">{%= fmt_num(credit_limit) %}</td>
+				<td class="num">{%= fmt_num(aging["0_30"]) %}</td>
+				<td class="num">{%= fmt_num(aging["31_60"]) %}</td>
+				<td class="num">{%= fmt_num(aging["61_90"]) %}</td>
+				<td class="num">{%= fmt_num(aging["over_90"]) %}</td>
+				<td class="num"><b>{%= fmt_num(closing_balance) %}</b></td>
+			</tr>
+		</tbody>
+	</table>
+
+	<table class="soa-grand">
+		<tr>
+			<th style="width: 34%;">الاجمالي</th>
+			<td class="num" style="width: 22%;">{%= fmt_num(total_debit) %}</td>
+			<td class="num" style="width: 22%;">{%= fmt_num(total_credit) %}</td>
+			<td class="num" style="width: 22%;">{%= fmt_num(closing_balance) %}</td>
+		</tr>
+	</table>
+
+	<div class="soa-footer-note">
+		يعتبر رصيد كشفنا هذا مطابقا لرصيد دفاتركم اذا لم يصلنا منكم خلال خمسة عشرة يوما من تاريخه
+	</div>
+
+	<table class="soa-signs">
+		<tr>
+			<td>
+				<div class="line"></div>
+				المحاسب
+			</td>
+			<td>
+				<div class="line"></div>
+				الادارة المالية
+			</td>
+			<td>
+				<div class="line"></div>
+				الادارة
+			</td>
+		</tr>
+	</table>
+</div>

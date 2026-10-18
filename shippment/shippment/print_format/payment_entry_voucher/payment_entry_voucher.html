@@ -1,0 +1,378 @@
+{#- Self-contained Payment Entry voucher (سند قبض / سند صرف). No custom jinja hooks required. -#}
+{% macro to_eastern(value) -%}
+{%- set ns = namespace(s=value | string) -%}
+{%- set western = "0123456789" -%}
+{%- set eastern = "٠١٢٣٤٥٦٧٨٩" -%}
+{%- for i in range(10) -%}
+	{%- set ns.s = ns.s.replace(western[i], eastern[i]) -%}
+{%- endfor -%}
+{{- ns.s -}}
+{%- endmacro %}
+{% set is_receive = doc.payment_type == "Receive" %}
+{% set title_ar = "سند قبض" if is_receive else "سند صرف" %}
+{% set party_label_en = "Received From" if is_receive else "Paid To" %}
+{% set party_label_ar = "استلمنا من المكرم" if is_receive else "إصرفوا للمكرم" %}
+{% set sign_label_en = "Received By" if is_receive else "Paid By" %}
+{% set sign_label_ar = "المستلم" if is_receive else "الصراف" %}
+{% set amount = doc.received_amount if is_receive else doc.paid_amount %}
+{% set riyal = (amount | int) %}
+{% set halala = (((amount - riyal) * 100) | round | int) %}
+{% if halala == 100 %}
+	{% set riyal = riyal + 1 %}
+	{% set halala = 0 %}
+{% endif %}
+{% set company = frappe.get_doc("Company", doc.company) %}
+{% set tax_id = company.tax_id or company.get("custom_commercial_register") or "" %}
+{% set party_name = doc.party_name or doc.party or "" %}
+{% set mop = doc.mode_of_payment or "" %}
+{% set mop_type = frappe.db.get_value("Mode of Payment", mop, "type") if mop else "" %}
+{% set mop_l = mop | lower %}
+{% set is_cash = mop_type == "Cash" or ("نقد" in mop) or ("cash" in mop_l) %}
+{% set is_cheque = ("شيك" in mop) or ("cheque" in mop_l) or ("مسودة" in mop) %}
+{% set is_transfer = (not is_cash and not is_cheque) and (mop_type == "Bank" or ("تحويل" in mop) or ("سداد" in mop) or ("transfer" in mop_l)) %}
+{% set voucher_no = doc.name.split("-")[-1] %}
+{% set purpose = (doc.remarks or "") | trim %}
+{% set ref_date = doc.reference_date or doc.posting_date %}
+{% set amount_in_words = frappe.utils.money_in_words(amount, "SAR") %}
+{% set g = frappe.utils.getdate(doc.posting_date) %}
+{% set gregorian_date = to_eastern("%02d" | format(g.day) ~ " / " ~ "%02d" | format(g.month) ~ " / " ~ g.year ~ "م") %}
+{#- Hijri via Kuwaiti algorithm -#}
+{% set jd1 = ((1461 * (g.year + 4800 + ((g.month - 14) / 12) | int)) / 4) | int %}
+{% set jd2 = ((367 * (g.month - 2 - 12 * (((g.month - 14) / 12) | int))) / 12) | int %}
+{% set jd3 = ((3 * ((((g.year + 4900 + ((g.month - 14) / 12) | int) / 100) | int))) / 4) | int %}
+{% set jd = jd1 + jd2 - jd3 + g.day - 32075 %}
+{% set l0 = jd - 1948440 + 10632 %}
+{% set n = ((l0 - 1) / 10631) | int %}
+{% set l1 = l0 - 10631 * n + 354 %}
+{% set j = ((((10985 - l1) / 5316) | int) * (((50 * l1) / 17719) | int)) + ((((l1 / 5670) | int) * (((43 * l1) / 15238) | int))) %}
+{% set l2 = l1 - ((((30 - j) / 15) | int) * (((17719 * j) / 50) | int)) - ((((j / 16) | int) * (((15238 * j) / 43) | int))) + 29 %}
+{% set h_month = ((24 * l2) / 709) | int %}
+{% set h_day = l2 - (((709 * h_month) / 24) | int) %}
+{% set h_year = 30 * n + j - 30 %}
+{% set hijri_date = to_eastern(("%02d" | format(h_day)) ~ " / " ~ ("%02d" | format(h_month)) ~ " / " ~ h_year ~ "هـ") %}
+{% set riyal_display = to_eastern(riyal) %}
+{% set halala_display = to_eastern("%02d" | format(halala)) %}
+{% set voucher_no_display = to_eastern(voucher_no) %}
+{% set tax_id_display = to_eastern(tax_id) %}
+{% set ref_g = frappe.utils.getdate(ref_date) %}
+{% set reference_date = to_eastern(("%02d" | format(ref_g.day)) ~ " / " ~ ("%02d" | format(ref_g.month)) ~ " / " ~ ref_g.year ~ "م") %}
+{% set bank_label = mop if (is_transfer or is_cheque or mop_type == "Bank") else "" %}
+{% set addr_name = frappe.db.get_value("Dynamic Link", {"link_doctype": "Company", "link_name": doc.company, "parenttype": "Address"}, "parent") %}
+{% set address = frappe.get_doc("Address", addr_name) if addr_name else none %}
+{% set phone = (address.phone if address else none) or company.phone_no or "" %}
+{% set footer_ns = namespace(ar="المملكة العربية السعودية", en="SAUDI ARABIA") %}
+{% if address %}
+	{% set footer_ns.ar = footer_ns.ar ~ " - " ~ (address.city or "") %}
+	{% set area = address.get("custom_area") or address.county or address.address_line2 or "" %}
+	{% if area %}{% set footer_ns.ar = footer_ns.ar ~ " - " ~ area %}{% endif %}
+	{% if phone %}{% set footer_ns.ar = footer_ns.ar ~ " - ت: " ~ to_eastern(phone) %}{% endif %}
+	{% set footer_ns.en = footer_ns.en ~ " - " ~ ((address.city or "") | upper) %}
+	{% if address.address_line1 %}{% set footer_ns.en = footer_ns.en ~ " - " ~ (address.address_line1 | upper) %}{% endif %}
+	{% if phone %}{% set footer_ns.en = footer_ns.en ~ " - TEL: " ~ phone %}{% endif %}
+{% endif %}
+{% set footer_ar = footer_ns.ar %}
+{% set footer_en = footer_ns.en %}
+<style>
+	.pev-wrap {
+		font-family: "Tahoma", "Arial", "DejaVu Sans", sans-serif;
+		color: #1a3a6b;
+		direction: ltr;
+		padding: 8px 12px 4px;
+		font-size: 12px;
+		line-height: 1.45;
+	}
+	.pev-header {
+		display: table;
+		width: 100%;
+		table-layout: fixed;
+		margin-bottom: 6px;
+	}
+	.pev-header-col {
+		display: table-cell;
+		vertical-align: middle;
+		width: 33.33%;
+	}
+	.pev-header-left { text-align: left; }
+	.pev-header-center { text-align: center; }
+	.pev-header-right { text-align: right; direction: rtl; }
+	.pev-company-en {
+		font-family: "Georgia", "Times New Roman", serif;
+		font-size: 18px;
+		font-weight: 700;
+		color: #1a4a8a;
+		margin: 0 0 4px;
+	}
+	.pev-company-ar {
+		font-size: 18px;
+		font-weight: 700;
+		color: #1a4a8a;
+		margin: 0 0 4px;
+	}
+	.pev-meta-small { font-size: 11px; color: #1a3a6b; }
+	.pev-logo { max-height: 70px; max-width: 140px; object-fit: contain; }
+	.pev-title {
+		text-align: center;
+		font-size: 28px;
+		font-weight: 700;
+		margin: 8px 0 2px;
+		color: #111;
+		letter-spacing: 1px;
+	}
+	.pev-voucher-no { text-align: center; margin: 0 0 10px; font-size: 14px; }
+	.pev-voucher-no .pev-num {
+		color: #c62828;
+		font-family: "Courier New", monospace;
+		font-weight: 700;
+		font-size: 18px;
+		letter-spacing: 2px;
+		margin: 0 6px;
+	}
+	.pev-top-meta { display: table; width: 100%; margin-bottom: 10px; }
+	.pev-top-meta > div { display: table-cell; vertical-align: middle; }
+	.pev-dates {
+		width: 45%;
+		direction: rtl;
+		text-align: right;
+		font-size: 13px;
+		line-height: 1.8;
+	}
+	.pev-amount-boxes { width: 55%; text-align: left; }
+	.pev-amount-table { border-collapse: collapse; float: left; }
+	.pev-amount-table th,
+	.pev-amount-table td {
+		border: 1.5px solid #222;
+		text-align: center;
+		padding: 4px 10px;
+	}
+	.pev-amount-table th {
+		font-size: 11px;
+		font-weight: 600;
+		background: #f7f7f7;
+	}
+	.pev-amount-table td {
+		min-width: 70px;
+		height: 32px;
+		font-size: 18px;
+		font-weight: 700;
+		color: #111;
+		font-family: "Courier New", monospace;
+	}
+	.pev-amount-table .pev-halala { min-width: 44px; }
+	.pev-body {
+		border: 1.5px solid #333;
+		border-radius: 10px;
+		padding: 14px 16px 10px;
+		min-height: 260px;
+	}
+	.pev-row {
+		display: table;
+		width: 100%;
+		margin-bottom: 14px;
+		table-layout: fixed;
+	}
+	.pev-row-en {
+		display: table-cell;
+		width: 48%;
+		text-align: left;
+		vertical-align: top;
+		font-size: 12px;
+	}
+	.pev-row-ar {
+		display: table-cell;
+		width: 52%;
+		text-align: right;
+		direction: rtl;
+		vertical-align: top;
+		font-size: 13px;
+	}
+	.pev-label { font-weight: 600; white-space: nowrap; }
+	.pev-value {
+		display: inline;
+		border-bottom: 1px dotted #666;
+		padding: 0 4px 1px;
+		color: #111;
+		font-weight: 500;
+	}
+	.pev-pay-row { margin-bottom: 14px; font-size: 12px; }
+	.pev-pay-grid { display: table; width: 100%; }
+	.pev-pay-grid > div { display: table-cell; vertical-align: middle; }
+	.pev-check {
+		display: inline-block;
+		width: 12px;
+		height: 12px;
+		border: 1.5px solid #333;
+		margin: 0 4px;
+		vertical-align: middle;
+		text-align: center;
+		line-height: 10px;
+		font-size: 10px;
+	}
+	.pev-check.checked::before { content: "✓"; font-weight: 700; }
+	.pev-transfer-tag {
+		display: inline-block;
+		margin: 0 8px;
+		padding: 1px 8px;
+		border-bottom: 1px solid #333;
+		font-weight: 600;
+		color: #111;
+	}
+	.pev-sign-row { display: table; width: 100%; margin-top: 28px; }
+	.pev-sign-left, .pev-sign-center, .pev-sign-right {
+		display: table-cell;
+		vertical-align: bottom;
+		width: 33.33%;
+	}
+	.pev-sign-left { text-align: left; }
+	.pev-sign-center { text-align: center; font-size: 14px; font-weight: 600; }
+	.pev-sign-right { text-align: right; direction: rtl; }
+	.pev-sign-line {
+		display: inline-block;
+		min-width: 120px;
+		border-bottom: 1px solid #333;
+		margin: 0 6px;
+		height: 18px;
+	}
+	.pev-footer {
+		margin-top: 14px;
+		padding-top: 8px;
+		border-top: 1px solid #888;
+		text-align: center;
+		font-size: 11px;
+		color: #1a3a6b;
+		line-height: 1.7;
+	}
+	.pev-footer-ar { direction: rtl; }
+	@media print { .pev-wrap { padding: 0; } }
+</style>
+
+<div class="pev-wrap">
+	<div class="pev-header">
+		<div class="pev-header-col pev-header-left">
+			<div class="pev-company-en">{{ company.company_name }}</div>
+			<div class="pev-meta-small">
+				{% if tax_id %}Unified National No.: {{ tax_id }}{% endif %}
+			</div>
+		</div>
+		<div class="pev-header-col pev-header-center">
+			{% if company.company_logo %}
+				<img class="pev-logo" src="{{ company.company_logo }}" alt="logo">
+			{% endif %}
+		</div>
+		<div class="pev-header-col pev-header-right">
+			<div class="pev-company-ar">{{ company.company_name }}</div>
+			<div class="pev-meta-small">
+				{% if tax_id %}الرقم الوطني الموحد : {{ tax_id_display }}{% endif %}
+			</div>
+		</div>
+	</div>
+
+	<div class="pev-title">{{ title_ar }}</div>
+	<div class="pev-voucher-no">
+		<span class="pev-label">رقم</span>
+		<span class="pev-num">{{ voucher_no_display }}</span>
+	</div>
+
+	<div class="pev-top-meta">
+		<div class="pev-amount-boxes">
+			<table class="pev-amount-table">
+				<tr>
+					<th>S.R. ريال</th>
+					<th class="pev-halala">H. هـ</th>
+				</tr>
+				<tr>
+					<td>{{ riyal_display }}</td>
+					<td class="pev-halala">{{ halala_display }}</td>
+				</tr>
+			</table>
+		</div>
+		<div class="pev-dates">
+			<div><span class="pev-label">التاريخ :</span> {{ hijri_date }}</div>
+			<div><span class="pev-label">الموافق :</span> {{ gregorian_date }}</div>
+		</div>
+	</div>
+
+	<div class="pev-body">
+		<div class="pev-row">
+			<div class="pev-row-en">
+				<span class="pev-label">{{ party_label_en }} :</span>
+				<span class="pev-value">{{ party_name }}</span>
+			</div>
+			<div class="pev-row-ar">
+				<span class="pev-label">{{ party_label_ar }} :</span>
+				<span class="pev-value">{{ party_name }}</span>
+			</div>
+		</div>
+
+		<div class="pev-row">
+			<div class="pev-row-en">
+				<span class="pev-label">The Sum of :</span>
+				<span class="pev-value">{{ amount_in_words }}</span>
+			</div>
+			<div class="pev-row-ar">
+				<span class="pev-label">مبلغ وقدره :</span>
+				<span class="pev-value">{{ amount_in_words }}</span>
+			</div>
+		</div>
+
+		<div class="pev-pay-row">
+			<div class="pev-pay-grid">
+				<div style="width: 42%; text-align: left;">
+					<span class="pev-label">Bank :</span>
+					<span class="pev-value">{{ bank_label }}</span>
+					&nbsp;
+					<span class="pev-label">Date</span>
+					<span class="pev-value">{{ reference_date }}</span>
+				</div>
+				<div style="width: 28%; text-align: center;">
+					{% if is_transfer %}<span class="pev-transfer-tag">تحويل</span>{% endif %}
+					<span class="pev-check {% if is_cash %}checked{% endif %}"></span>
+					<span>نقداً</span>
+					&nbsp;
+					<span class="pev-check {% if is_cheque %}checked{% endif %}"></span>
+					<span>شيك رقم</span>
+					{% if doc.reference_no and not is_cash %}
+						<span class="pev-value">{{ doc.reference_no }}</span>
+					{% endif %}
+				</div>
+				<div style="width: 30%; text-align: right; direction: rtl;">
+					<span class="pev-label">بواسطة :</span>
+					<span class="pev-value">{{ mop }}</span>
+					&nbsp;
+					<span class="pev-label">بتاريخ</span>
+					<span class="pev-value">{{ reference_date }}</span>
+				</div>
+			</div>
+			<div style="margin-top: 4px; text-align: left; font-size: 11px; color: #555;">
+				Cash / Cheque No.{% if doc.reference_no %}: <strong>{{ doc.reference_no }}</strong>{% endif %}
+			</div>
+		</div>
+
+		<div class="pev-row">
+			<div class="pev-row-en">
+				<span class="pev-label">For :</span>
+				<span class="pev-value">{{ purpose }}</span>
+			</div>
+			<div class="pev-row-ar">
+				<span class="pev-label">وذلك مقابل :</span>
+				<span class="pev-value">{{ purpose }}</span>
+			</div>
+		</div>
+
+		<div class="pev-sign-row">
+			<div class="pev-sign-left">
+				<span class="pev-label">{{ sign_label_en }}</span>
+				<span class="pev-sign-line"></span>
+			</div>
+			<div class="pev-sign-center">الختم</div>
+			<div class="pev-sign-right">
+				<span class="pev-label">{{ sign_label_ar }}</span>
+				<span class="pev-sign-line"></span>
+			</div>
+		</div>
+	</div>
+
+	<div class="pev-footer">
+		<div class="pev-footer-ar">{{ footer_ar }}</div>
+		<div>{{ footer_en }}</div>
+	</div>
+</div>

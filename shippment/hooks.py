@@ -43,7 +43,13 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    "Sales Invoice" : "public/js/sales_invoice.js",
+    "Purchase Invoice" : "public/js/purchase_invoice.js",
+    "Shipment" : "public/js/shipment.js",
+    "User" : "public/js/user.js",
+    "Journal Entry" : "public/js/journal_entry.js"
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -74,10 +80,18 @@ app_license = "mit"
 # ----------
 
 # add methods and filters to jinja environment
-# jinja = {
-# 	"methods": "shippment.utils.jinja_methods",
-# 	"filters": "shippment.utils.jinja_filters"
-# }
+jinja = {
+	"methods": [
+		"shippment.print_utils.get_payment_voucher_context",
+		"shippment.print_utils.to_eastern_numerals",
+		"shippment.print_utils.money_in_words_ar",
+		"shippment.print_utils.format_hijri_date",
+		"shippment.print_utils.format_gregorian_date",
+		"shippment.print_utils.get_sales_invoice_tax_print_context",
+		"shippment.print_utils.get_invoice_qr_image_src",
+		"shippment.print_utils.build_tax_invoice_rows",
+	]
+}
 
 # Installation
 # ------------
@@ -129,21 +143,28 @@ app_license = "mit"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+	"Payment Request": "shippment.overrides.payment_request.CustomPaymentRequest"
+}
 
 # Document Events
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"Shipment": {
+		# "validate": "shippment.overrides.shipment.set_shipment_service",
+        "on_update": "shippment.overrides.shipment.update_vessel_detail",
+	},
+    "Purchase Invoice": {
+        "after_insert": "shippment.overrides.purchase_invoice.link_customs_shipment",
+        "before_cancel": "shippment.overrides.purchase_invoice.unlink_customs_shipment",
+        "on_trash": "shippment.overrides.purchase_invoice.unlink_customs_shipment",
+    },
+    "Journal Entry": {
+        "validate": "shippment.overrides.journal_entry.set_party_name"
+    }
+}
 
 # Scheduled Tasks
 # ---------------
@@ -242,3 +263,10 @@ app_license = "mit"
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+
+
+fixtures = [
+    "Ports",
+    "Shipment Status",
+    "Type of Shipping"
+]

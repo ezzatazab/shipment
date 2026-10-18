@@ -1,0 +1,73 @@
+[
+ {
+  "_liked_by": "[]",
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Ports",
+  "modified": "2025-10-05 09:10:56.096369",
+  "name": "جمرك ميناء الملك عبدالله برابغ",
+  "port_name": "جمرك ميناء الملك عبدالله برابغ",
+  "type_of_shipping": "Sea Freight"
+ },
+ {
+  "_liked_by": "[]",
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Ports",
+  "modified": "2025-10-05 09:30:36.544778",
+  "name": "جمرك سلوى",
+  "port_name": "جمرك سلوى",
+  "type_of_shipping": "Land Freight"
+ },
+ {
+  "_liked_by": "[]",
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Ports",
+  "modified": "2025-11-30 20:38:39.170990",
+  "name": "جمرك البطحاء",
+  "port_name": "جمرك البطحاء",
+  "type_of_shipping": "Land Freight"
+ },
+ {
+  "_liked_by": "[]",
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Ports",
+  "modified": "2025-10-05 09:17:41.273710",
+  "name": "جمرك مطار الملك عبدالعزيز الدولي بجدة",
+  "port_name": "جمرك مطار الملك عبدالعزيز الدولي بجدة",
+  "type_of_shipping": "Air Freight"
+ },
+ {
+  "_liked_by": "[]",
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Ports",
+  "modified": "2025-10-05 09:31:06.710971",
+  "name": "جمرك الرياض الميناء الجاف",
+  "port_name": "جمرك الرياض الميناء الجاف",
+  "type_of_shipping": "Land Freight"
+ },
+ {
+  "_liked_by": "[]",
+  "_user_tags": ",لم تكتمل",
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Ports",
+  "modified": "2025-11-24 16:25:18.715344",
+  "name": "جمرك ميناء جدة الإسلامي",
+  "port_name": "جمرك ميناء جدة الإسلامي",
+  "type_of_shipping": "Sea Freight"
+ },
+ {
+  "_liked_by": "[]",
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Ports",
+  "modified": "2025-11-24 17:19:09.243517",
+  "name": "جمرك ميناء الملك عبدالعزيز بالدمام",
+  "port_name": "جمرك ميناء الملك عبدالعزيز بالدمام",
+  "type_of_shipping": "Sea Freight"
+ }
+]

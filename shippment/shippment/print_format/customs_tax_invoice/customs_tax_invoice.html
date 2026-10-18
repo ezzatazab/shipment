@@ -1,0 +1,371 @@
+{#- Tax Invoice / فاتورة ضريبية — Sales Invoice print format.
+    Header from letterhead. QR from invoice attachment (fallback ZATCA).
+    Detail rows from Customs Shipment linked on items. -#}
+{% macro fmt_date(d) -%}
+{%- if d -%}
+{%- set g = frappe.utils.getdate(d) -%}
+{{- "%04d/%02d/%02d" | format(g.year, g.month, g.day) -}}
+{%- endif -%}
+{%- endmacro %}
+{% macro hijri_slash(d) -%}
+{%- if d -%}
+{%- set g = frappe.utils.getdate(d) -%}
+{%- set jd1 = ((1461 * (g.year + 4800 + ((g.month - 14) / 12) | int)) / 4) | int -%}
+{%- set jd2 = ((367 * (g.month - 2 - 12 * (((g.month - 14) / 12) | int))) / 12) | int -%}
+{%- set jd3 = ((3 * ((((g.year + 4900 + ((g.month - 14) / 12) | int) / 100) | int))) / 4) | int -%}
+{%- set jd = jd1 + jd2 - jd3 + g.day - 32075 -%}
+{%- set l0 = jd - 1948440 + 10632 -%}
+{%- set n = ((l0 - 1) / 10631) | int -%}
+{%- set l1 = l0 - 10631 * n + 354 -%}
+{%- set j = ((((10985 - l1) / 5316) | int) * (((50 * l1) / 17719) | int)) + ((((l1 / 5670) | int) * (((43 * l1) / 15238) | int))) -%}
+{%- set l2 = l1 - ((((30 - j) / 15) | int) * (((17719 * j) / 50) | int)) - ((((j / 16) | int) * (((15238 * j) / 43) | int))) + 29 -%}
+{%- set h_month = ((24 * l2) / 709) | int -%}
+{%- set h_day = l2 - (((709 * h_month) / 24) | int) -%}
+{%- set h_year = 30 * n + j - 30 -%}
+{{- "%04d/%02d/%02d" | format(h_year, h_month, h_day) -}}
+{%- endif -%}
+{%- endmacro %}
+{% macro money(v) -%}
+{{- frappe.utils.fmt_money(v, currency=doc.currency) -}}
+{%- endmacro %}
+
+{#- Build unique CS keys -#}
+{% set cs_keys = [] %}
+{% for item in doc.items %}
+	{% set key = item.customs_shipment if item.customs_shipment else ("__loose_" ~ item.idx) %}
+	{% if key not in cs_keys %}
+		{% if cs_keys.append(key) %}{% endif %}
+	{% endif %}
+{% endfor %}
+
+{#- Tax map from first tax row -#}
+{% set tax_map = {} %}
+{% if doc.taxes and doc.taxes[0].item_wise_tax_detail %}
+	{% set tax_map = json.loads(doc.taxes[0].item_wise_tax_detail) %}
+{% endif %}
+
+{#- QR: attachment image first, then phase-1 ZATCA -#}
+{% set qr_src = namespace(url="") %}
+{% set files = frappe.get_all("File", filters={"attached_to_doctype": doc.doctype, "attached_to_name": doc.name}, fields=["file_url", "file_name"]) %}
+{% for f in files %}
+	{% set fname = (f.file_name or "") | lower %}
+	{% set furl = (f.file_url or "") | lower %}
+	{% if fname.endswith(".png") or fname.endswith(".jpg") or fname.endswith(".jpeg") or fname.endswith(".svg") or fname.endswith(".webp") or fname.endswith(".gif") or furl.endswith(".png") or furl.endswith(".jpg") or furl.endswith(".jpeg") %}
+		{% if "qr" in fname %}
+			{% set qr_src.url = f.file_url %}
+		{% elif not qr_src.url %}
+			{% set qr_src.url = f.file_url %}
+		{% endif %}
+	{% endif %}
+{% endfor %}
+{% if not qr_src.url %}
+	{#- Fallback: ZATCA Sales Invoice Additional Fields QR image -#}
+	{% set siaf_name = frappe.db.get_value("Sales Invoice Additional Fields", {"sales_invoice": doc.name}, "name") %}
+	{% if siaf_name %}
+		{% set siaf = frappe.get_doc("Sales Invoice Additional Fields", siaf_name) %}
+		{% if siaf.qr_image_src %}
+			{% set qr_src.url = siaf.qr_image_src %}
+		{% endif %}
+	{% endif %}
+{% endif %}
+
+{#- Bank details -#}
+{% set bank = namespace(name="", account="", iban="") %}
+{% set banks = frappe.get_all("Bank Account", filters={"company": doc.company, "disabled": 0}, fields=["account_name", "bank", "bank_account_no", "iban", "is_default", "is_company_account"]) %}
+{% for b in banks %}
+	{% if (b.is_company_account or b.is_default or not bank.name) %}
+		{% set bank.name = b.bank or b.account_name or bank.name %}
+		{% set bank.account = b.bank_account_no or bank.account %}
+		{% set bank.iban = b.iban or bank.iban %}
+	{% endif %}
+{% endfor %}
+
+<style>
+	.ti-wrap { font-family: "Tahoma", "Arial", "DejaVu Sans", sans-serif; color: #111; font-size: 11px; direction: ltr; }
+	.ti-title {
+		background: #111;
+		color: #fff;
+		text-align: center;
+		font-size: 18px;
+		font-weight: 700;
+		padding: 8px 12px;
+		margin: 8px 0 12px;
+		letter-spacing: 0.5px;
+	}
+	.ti-qr { text-align: center; margin: 8px 0 14px; }
+	.ti-qr img { width: 140px; height: 140px; object-fit: contain; }
+	.ti-meta { width: 100%; border-collapse: collapse; margin-bottom: 12px; table-layout: fixed; }
+	.ti-meta td { vertical-align: top; width: 50%; padding: 0 4px; }
+	.ti-box { border: 1px solid #333; }
+	.ti-box-row { display: table; width: 100%; border-bottom: 1px solid #333; }
+	.ti-box-row:last-child { border-bottom: none; }
+	.ti-box-label {
+		display: table-cell;
+		width: 38%;
+		padding: 6px 8px;
+		font-weight: 700;
+		background: #f3f3f3;
+		border-right: 1px solid #333;
+		font-size: 11px;
+	}
+	.ti-box-value { display: table-cell; padding: 6px 8px; font-size: 12px; }
+	.ti-box.rtl .ti-box-label { border-right: none; border-left: 1px solid #333; text-align: right; }
+	.ti-box.rtl .ti-box-value { text-align: right; direction: rtl; }
+	.ti-items {
+		width: 100%;
+		border-collapse: collapse;
+		margin-top: 4px;
+		font-size: 10px;
+	}
+	.ti-items th, .ti-items td {
+		border: 1px solid #333;
+		padding: 5px 4px;
+		text-align: center;
+		vertical-align: middle;
+	}
+	.ti-items th {
+		background: #efefef;
+		font-weight: 700;
+		line-height: 1.25;
+	}
+	.ti-items th .en { display: block; font-size: 8px; font-weight: 600; color: #444; }
+	.ti-items td.num { text-align: right; white-space: nowrap; }
+	.ti-items td.ref { text-align: left; direction: ltr; }
+	.ti-summary-wrap { width: 100%; margin-top: 10px; }
+	.ti-summary {
+		float: left;
+		width: 42%;
+		border-collapse: collapse;
+		font-size: 12px;
+	}
+	.ti-summary td { border: 1px solid #333; padding: 6px 8px; }
+	.ti-summary .lbl { font-weight: 700; text-align: right; direction: rtl; background: #f7f7f7; width: 60%; }
+	.ti-summary .val { text-align: right; font-weight: 600; }
+	.ti-summary tr.net td { background: #e8e8e8; font-weight: 700; }
+	.ti-clear { clear: both; }
+	.ti-bank {
+		margin-top: 16px;
+		border: 1px solid #333;
+	}
+	.ti-bank-title {
+		background: #d0d0d0;
+		text-align: center;
+		font-weight: 700;
+		padding: 6px;
+		border-bottom: 1px solid #333;
+		font-size: 12px;
+	}
+	.ti-bank table { width: 100%; border-collapse: collapse; }
+	.ti-bank th, .ti-bank td {
+		border: 1px solid #333;
+		padding: 6px 8px;
+		text-align: center;
+		font-size: 11px;
+	}
+	.ti-bank th { background: #f3f3f3; font-weight: 700; }
+	.ti-signs {
+		display: table;
+		width: 100%;
+		margin-top: 28px;
+		table-layout: fixed;
+	}
+	.ti-signs > div { display: table-cell; width: 50%; vertical-align: top; }
+	.ti-signs .label { font-weight: 700; font-size: 12px; margin-bottom: 28px; }
+	.ti-signs .line { border-bottom: 1px dotted #333; width: 70%; margin-top: 8px; }
+	.ti-notes {
+		margin-top: 22px;
+		font-size: 10px;
+		line-height: 1.55;
+		color: #222;
+	}
+	.ti-notes .ar { direction: rtl; text-align: right; margin-top: 4px; }
+	@media print {
+		.ti-wrap { padding: 0; }
+	}
+</style>
+
+<div class="ti-wrap">
+	{% if letter_head and not no_letterhead %}
+		{{ letter_head }}
+	{% endif %}
+
+	<div class="ti-title">Tax Invoice فاتورة ضريبية</div>
+
+	{% if qr_src.url %}
+	<div class="ti-qr">
+		<img src="{{ qr_src.url }}" alt="QR">
+	</div>
+	{% endif %}
+
+	<table class="ti-meta">
+		<tr>
+			<td>
+				<div class="ti-box">
+					<div class="ti-box-row">
+						<div class="ti-box-label">Invoice Num / رقم الفاتورة</div>
+						<div class="ti-box-value">{{ doc.name }}</div>
+					</div>
+					<div class="ti-box-row">
+						<div class="ti-box-label">DATE / التاريخ</div>
+						<div class="ti-box-value">
+							{{ fmt_date(doc.posting_date) }}
+							{% if doc.posting_date %}&nbsp;&nbsp;{{ hijri_slash(doc.posting_date) }}{% endif %}
+						</div>
+					</div>
+				</div>
+			</td>
+			<td>
+				<div class="ti-box rtl">
+					<div class="ti-box-row">
+						<div class="ti-box-label">Client / العميل</div>
+						<div class="ti-box-value">{{ doc.customer_name or doc.customer }}</div>
+					</div>
+				</div>
+			</td>
+		</tr>
+	</table>
+
+	<table class="ti-items">
+		<thead>
+			<tr>
+				<th>م<br><span class="en">#</span></th>
+				<th>رقم السند<br><span class="en">Reference</span></th>
+				<th>تاريخ الدخول<br><span class="en">Entry Date</span></th>
+				<th>تاريخ الخروج<br><span class="en">Exit Date</span></th>
+				<th>رقم الحاوية<br><span class="en">Container</span></th>
+				<th>قيمة التخزين<br><span class="en">Storage</span></th>
+				<th>التخزين الاضافى<br><span class="en">Add. Storage</span></th>
+				<th>خدمات ضريبيه<br><span class="en">Taxable</span></th>
+				<th>خدمات غير ضريبيه<br><span class="en">Non-taxable</span></th>
+				<th>ضريبة القيمه المضافة<br><span class="en">VAT</span></th>
+				<th>الاجمالى<br><span class="en">Total</span></th>
+			</tr>
+		</thead>
+		<tbody>
+		{% for key in cs_keys %}
+			{% set row = namespace(
+				ref=key.replace("__loose_", "") if key.startswith("__loose_") else key,
+				entry="", exit="", container="",
+				storage=0, additional=0, taxable=0, nontax=0, vat=0, total=0
+			) %}
+			{% if not key.startswith("__loose_") and frappe.db.exists("Customs Shipment", key) %}
+				{% set cs = frappe.get_doc("Customs Shipment", key) %}
+				{% set row.ref = cs.name %}
+				{% set row.entry = cs.actual_arrival_date or cs.customs_declaration_date or cs.date or cs.expected_arrival_date %}
+				{% set row.exit = cs.delivery_permit_date %}
+				{% set vessels = [] %}
+				{% for v in cs.vessel_details or [] %}
+					{% if v.vessel_no %}{% if vessels.append(v.vessel_no) %}{% endif %}{% endif %}
+				{% endfor %}
+				{% set row.container = vessels | join(", ") if vessels else (cs.shipment_type or "") %}
+			{% endif %}
+
+			{% for item in doc.items %}
+				{% set item_key = item.customs_shipment if item.customs_shipment else ("__loose_" ~ item.idx) %}
+				{% if item_key == key %}
+					{% if key.startswith("__loose_") %}
+						{% set row.ref = item.item_code or item.item_name %}
+						{% if not row.container %}
+							{% set row.container = (item.description or item.item_name or "") | striptags %}
+						{% endif %}
+					{% endif %}
+					{% set amt = item.net_amount if item.net_amount is not none else item.amount %}
+					{% set item_tax = 0 %}
+					{% set code = item.item_code or item.item_name %}
+					{% if code and tax_map.get(code) %}
+						{% set vals = tax_map.get(code) %}
+						{% if vals is iterable and vals is not string and vals | length >= 2 %}
+							{% set item_tax = vals[1] %}
+						{% endif %}
+					{% endif %}
+					{% set name_txt = (item.item_name or "") ~ " " ~ (item.item_code or "") %}
+					{% set has_tax = item_tax > 0 or item.item_tax_template %}
+					{% if ("تخزين" in name_txt) and ("اضاف" not in name_txt) and ("تأخير" not in name_txt) and ("تمديد" not in name_txt) %}
+						{% set row.storage = row.storage + amt %}
+					{% elif ("تأخير" in name_txt) or ("تمديد" in name_txt) or ("اضاف" in name_txt) %}
+						{% set row.additional = row.additional + amt %}
+					{% elif has_tax %}
+						{% set row.taxable = row.taxable + amt %}
+					{% else %}
+						{% set row.nontax = row.nontax + amt %}
+					{% endif %}
+					{% set row.vat = row.vat + item_tax %}
+					{% set row.total = row.total + amt + item_tax %}
+				{% endif %}
+			{% endfor %}
+
+			<tr>
+				<td>{{ loop.index }}</td>
+				<td class="ref">{{ row.ref }}</td>
+				<td>{{ fmt_date(row.entry) }}</td>
+				<td>{{ fmt_date(row.exit) }}</td>
+				<td>{{ row.container }}</td>
+				<td class="num">{% if row.storage %}{{ "%.2f" | format(row.storage) }}{% endif %}</td>
+				<td class="num">{% if row.additional %}{{ "%.2f" | format(row.additional) }}{% endif %}</td>
+				<td class="num">{% if row.taxable %}{{ "%.2f" | format(row.taxable) }}{% endif %}</td>
+				<td class="num">{% if row.nontax %}{{ "%.2f" | format(row.nontax) }}{% endif %}</td>
+				<td class="num">{% if row.vat %}{{ "%.2f" | format(row.vat) }}{% endif %}</td>
+				<td class="num"><strong>{{ "%.2f" | format(row.total) }}</strong></td>
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+
+	<div class="ti-summary-wrap">
+		<table class="ti-summary">
+			<tr>
+				<td class="lbl">الاجمالى قبل الضريبة</td>
+				<td class="val">{{ "%.2f" | format(doc.net_total) }}</td>
+			</tr>
+			<tr>
+				<td class="lbl">الضريبة</td>
+				<td class="val">{{ "%.2f" | format(doc.total_taxes_and_charges) }}</td>
+			</tr>
+			<tr class="net">
+				<td class="lbl">الصافي</td>
+				<td class="val">{{ "%.2f" | format(doc.grand_total) }}</td>
+			</tr>
+		</table>
+		<div class="ti-clear"></div>
+	</div>
+
+	<div class="ti-bank">
+		<div class="ti-bank-title">Bank Account Details تفاصيل الحسابات البنكية</div>
+		<table>
+			<thead>
+				<tr>
+					<th>Bank Name<br>اسم البنك</th>
+					<th>Account #<br>رقم الحساب</th>
+					<th>IBAN #<br>رقم الايبان</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>{{ bank.name }}</td>
+					<td>{{ bank.account }}</td>
+					<td>{{ bank.iban }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<div class="ti-signs">
+		<div>
+			<div class="label">RECEIVED BY المستلم</div>
+			<div class="line"></div>
+		</div>
+		<div style="text-align: right;">
+			<div class="label">FINANCE المحاسبة</div>
+			<div class="line" style="margin-left: auto;"></div>
+		</div>
+	</div>
+
+	<div class="ti-notes">
+		<div>
+			Official charges as received. Kindly verify and confirm the receipt. Any discrepancy must be reported within 14 days.
+		</div>
+		<div class="ar">
+			الرسوم الرسمية كما هي مستلمة. يرجى التحقق وتأكيد الاستلام. أي اختلاف يجب الإبلاغ عنه خلال ١٤ يوماً.
+		</div>
+	</div>
+</div>

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="pdfkit-page-size" content="A4">
+    <meta name="pdfkit-orientation" content="Landscape">
+    <meta name="pdfkit-margin-right" content="7mm">
+    <meta name="pdfkit-margin-left" content="7mm">
+    <meta name="pdfkit-margin-bottom" content="7mm">
+    <meta name="pdfkit-margin-top" content="7mm">
+    <style>
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+        }
+
+        /* Header section style */
+        .header-section {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .header-section table {
+            width: 100%;
+            border: none;
+            border-collapse: collapse;
+        }
+        
+        .header-section td {
+            border: none;
+            vertical-align: middle;
+            padding: 0px 2px;
+        }
+        
+        /* Logo on the LEFT */
+        .header-logo {
+            width: 12%;
+            text-align: left;
+            padding-left: 0px;
+        }
+        
+        .header-logo img {
+            max-height: 120px;
+            max-width: 180px;
+        }
+        
+        /* English labels - middle left */
+        .header-labels-en {
+            width: 18%;
+            text-align: right;
+            font-size: 11px;
+        }
+        
+        .header-labels-en p {
+            margin: 0px 0;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        
+        /* Values - center (WIDER) */
+        .header-values {
+            width: 40%;
+            text-align: right;
+            font-size: 11px;
+        }
+        
+        .header-values p {
+            margin: 0px 0;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+        
+        /* Arabic labels - right (NARROWER) */
+        .header-labels-ar {
+            width: 30%;
+            text-align: right;
+            direction: rtl;
+            font-size: 11px;
+        }
+        
+        .header-labels-ar p {
+            margin: 0px 0;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        /* Client and Seller Information Tables */
+        .info-tables-wrapper {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .info-tables-wrapper::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        
+        .info-table {
+            width: 49.5%;
+            float: left;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+        
+        .info-table:first-child {
+            margin-right: 1%;
+        }
+        
+        .info-table th,
+        .info-table td {
+            border: 1px solid #000;
+            padding: 3px 6px;
+            line-height: 1.2;
+        }
+        
+        .info-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            padding: 4px 6px;
+            text-align: center;
+        }
+        
+        .info-table .label-ar {
+            font-weight: bold;
+            text-align: right;
+            width: 38%;
+            direction: rtl;
+        }
+        
+        .info-table .label-en {
+            font-weight: bold;
+            text-align: left;
+            width: 32%;
+        }
+        
+        .info-table .value {
+            text-align: center;
+            width: 30%;
+        }
+
+        /* Item Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 5px 0;
+            direction: rtl;
+        }
+        
+        .items-table th,
+        .items-table td {
+            border: 1px solid black;
+            text-align: center;
+            padding: 3px 3px;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        
+        .items-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            color: black;
+            padding: 5px 3px;
+            line-height: 1.4;
+        }
+        
+        .items-table .item-desc {
+            text-align: right;
+            padding-right: 6px;
+        }
+
+        /* Bottom section - QR and Totals */
+        .bottom-section {
+            width: 100%;
+            margin-top: 5px;
+        }
+        
+        .bottom-section table {
+            width: 100%;
+            border: none;
+            border-collapse: collapse;
+        }
+        
+        .bottom-section > table > tbody > tr > td {
+            border: none;
+            vertical-align: top;
+            padding: 0;
+        }
+
+        .qr-cell {
+            width: 18%;
+            text-align: center;
+            padding-right: 8px;
+        }
+        
+        .qr-cell img {
+            max-width: 140px;
+            height: auto;
+        }
+
+        .totals-cell {
+            width: 82%;
+        }
+
+        /* Totals Table */
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+            direction: rtl;
+        }
+        
+        .totals-table th,
+        .totals-table td {
+            border: 1px solid black;
+            text-align: center;
+            font-size: 11px;
+            padding: 4px 6px;
+            line-height: 1.2;
+        }
+        
+        .totals-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+            color: black;
+        }
+        
+        .totals-table .label-ar {
+            text-align: right;
+            font-weight: bold;
+            width: 42%;
+        }
+        
+        .totals-table .label-en {
+            text-align: left;
+            font-weight: bold;
+            width: 42%;
+        }
+        
+        .totals-table .amount {
+            text-align: center;
+            width: 16%;
+        }
+
+        /* Terms Table */
+        .terms-table {
+            width: 100%;
+            margin-top: 5px;
+            border-collapse: collapse;
+        }
+        
+        .terms-table th {
+            background-color: #f5f5f5;
+            color: black;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            padding: 5px;
+            border: 1px solid black;
+        }
+        
+        .terms-table td {
+            border: 1px solid black;
+            text-align: left;
+            font-size: 11px;
+            padding: 5px;
+        }
+
+        /* Signature Section */
+        .signature-section {
+            width: 100%;
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        .signature-section table {
+            width: 100%;
+            border: none;
+            border-collapse: collapse;
+        }
+        
+        .signature-section td {
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 5px;
+        }
+
+        /* Print adjustments */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header Section -->
+<div class="header-section">
+    <table>
+        <tr>
+            <!-- Logo on the LEFT -->
+            {% set company = frappe.get_doc("Company", doc.company) %}
+            {% if company.company_logo %}
+            <td class="header-logo">
+                <img src="{{ company.company_logo }}">
+            </td>
+            {% endif %}
+            
+            <!-- English labels - middle left -->
+			<td class="header-labels-en">
+            </td>
+			<td class="header-labels-en">
+            </td>
+            <td class="header-labels-en">
+                <p style="font-weight:bold;font-size:14px;">Tax invoice</p>
+                <p>Invoice No</p>
+                <p>Issue Date</p>
+                <p>Due Date</p> 
+                {% if(doc.is_pos == 1) %}
+                <p style="font-weight:bold;font-size:14px;">Cash invoice</p>
+                {% endif %}
+                {% if(doc.is_pos == 0) %}
+                <p style="font-weight:bold;font-size:14px;">Credit invoice</p>
+                {% endif %}
+            </td>
+
+			<td class="header-labels-en">
+            </td>
+
+            <!-- Values - center (WIDER) -->
+            <td class="header-values">
+                <p>&nbsp;</p>
+                <p>{{ doc.name }}</p>
+                <p>{{ doc.posting_date }}</p>
+                <p>{{ doc.due_date }}</p>
+            </td>
+
+            <!-- Arabic labels - right -->
+            <td class="header-labels-ar">
+                <p style="font-weight:bold;font-size:14px;">فاتورة ضريبية</p>
+                <p>رقم الفاتورة</p>
+                <p>تاريخ الفاتورة</p>
+                <p>تاريخ الاستحقاق</p>
+                {% if(doc.is_pos == 1) %}
+                <p style="font-weight:bold;font-size:14px;">فاتورة نقدية</p>
+                {% endif %}
+                {% if(doc.is_pos == 0) %}
+                <p style="font-weight:bold;font-size:14px;">فاتورة أجل</p>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- Client and Seller Information -->
+<div class="info-tables-wrapper">
+    <!-- Client Information -->
+    <table class="info-table">
+        {% if doc.company %}
+        {% set company = frappe.get_doc("Company", doc.company) %}
+        {% endif %}
+
+        {% if doc.customer_address %}
+        {% set customer_address_doc = frappe.get_doc('Address', doc.customer_address) %}
+        {% endif %}
+
+        <tr>
+            <th colspan="3">
+                <span style="float: left;">Client Information</span>
+                <span style="float: right;">بيانات العميل</span>
+            </th>
+        </tr>
+        <tr>
+            <td class="label-en">Name:</td>
+            <td colspan="2" style="text-align: center;">{{ doc.customer_name }}</td>
+        </tr>
+        <tr>
+            <td class="label-en">Building No:</td>
+            <td class="value">{% if customer_address_doc %}{{ customer_address_doc.custom_building_number or "---" }}{% else %}---{% endif %}</td>
+            <td class="label-ar">رقم المبنى:</td>
+        </tr>
+        <tr>
+            <td class="label-en">Street Name:</td>
+            <td class="value">{% if customer_address_doc %}{{ customer_address_doc.custom_street_name or "---" }}{% else %}---{% endif %}</td>
+            <td class="label-ar">إسم الشارع:</td>
+        </tr>
+        <tr>
+            <td class="label-en">District:</td>
+            <td class="value">{% if customer_address_doc %}{{ customer_address_doc.custom_area or "---" }}{% else %}---{% endif %}</td>
+            <td class="label-ar">الحي:</td>
+        </tr>
+        <tr>
+            <td class="label-en">City:</td>
+            <td class="value">{% if customer_address_doc %}{{ customer_address_doc.city or "---" }}{% else %}---{% endif %}</td>
+            <td class="label-ar">المدينة:</td>
+        </tr>
+        <tr>
+            <td class="label-en">Postal Code:</td>
+            <td class="value">{% if customer_address_doc %}{{ customer_address_doc.pincode or "---" }}{% else %}---{% endif %}</td>
+            <td class="label-ar">الرمز البريدي:</td>
+        </tr>
+        
+        {% set customer_tax_id = frappe.db.get_value('Customer', doc.customer, 'tax_id') %}
+
+        <tr>
+            <td class="label-en">CR Number:</td>
+            <td class="value">{{ customer_commercial_register or "---" }}</td>
+            <td class="label-ar">السجل التجاري:</td>
+        </tr>
+        <tr>
+            <td class="label-en">VAT Number:</td>
+            <td class="value">{{ customer_tax_id or "---" }}</td>
+            <td class="label-ar">الرقم الضريبي:</td>
+        </tr>
+    </table>
+
+    <!-- Seller Information -->
+    <table class="info-table">
+        {% if doc.company_address %}
+        {% set supplier_address_doc = frappe.get_doc('Address', doc.company_address) %}
+        {% endif %}
+
+        <tr>
+            <th colspan="3">
+                <span style="float: left;">Seller Information</span>
+                <span style="float: right;">بيانات البائع</span>
+            </th>
+        </tr>
+        <tr>
+            <td class="label-en">Name:</td>
+            <td colspan="2" style="text-align: center;">{{ company.company_name or "---" }}</td>
+        </tr>
+        <tr>
+            <td class="label-en">Building No:</td>
+            <td class="value">{% if supplier_address_doc %}{{ supplier_address_doc.custom_building_number or "---" }}{% else %}---{% endif %}</td>
+            <td class="label-ar">رقم المبنى:</td>
+        </tr>
+        <tr>
+            <td class="label-en">Street Name:</td>
+            <td class="value">{% if supplier_address_doc %}{{ supplier_address_doc.custom_street_name or "---" }}{% else %}---{% endif %}</td>
+            <td class="label-ar">إسم الشارع:</td>
+        </tr>
+        <tr>
+            <td class="label-en">District:</td>
+            <td class="value">{% if supplier_address_doc %}{{ supplier_address_doc.custom_area or "---" }}{% else %}---{% endif %}</td>
+            <td class="label-ar">الحي:</td>
+        </tr>
+        <tr>
+            <td class="label-en">City:</td>
+            <td class="value">{% if supplier_address_doc %}{{ supplier_address_doc.city or "---" }}{% else %}---{% endif %}</td>
+            <td class="label-ar">المدينة:</td>
+        </tr>
+        <tr>
+            <td class="label-en">Postal Code:</td>
+            <td class="value">{% if supplier_address_doc %}{{ supplier_address_doc.pincode or "---" }}{% else %}---{% endif %}</td>
+            <td class="label-ar">الرمز البريدي:</td>
+        </tr>
+        <tr>
+            <td class="label-en">CR Number:</td>
+            <td class="value">{{ company.custom_commercial_register or "---" }}</td>
+            <td class="label-ar">السجل التجاري:</td>
+        </tr>
+        <tr>
+            <td class="label-en">VAT Number:</td>
+            <td class="value">{{ company.tax_id or "---" }}</td>
+            <td class="label-ar">الرقم الضريبي:</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Clear floats -->
+<div style="clear: both;"></div>
+
+<!-- Items Table -->
+<table class="items-table">
+    <thead>
+        <tr>
+            <th style="width: 3%;">#</th>
+            <th style="width: 32%;">
+                طبيعة السلع أو الخدمات<br>
+                Nature of Goods or Services
+            </th>
+            <th style="width: 10%;">
+                سعر الوحدة<br>
+                Unit Price
+            </th>
+            <th style="width: 8%;">
+                الكمية<br>
+                Quantity
+            </th>
+            <th style="width: 14%;">
+                المبلغ الخاضع للضريبة<br>
+                Taxable Amount
+            </th>
+            <th style="width: 10%;">
+                نسبة الضريبة<br>
+                Tax Rate
+            </th>
+            <th style="width: 11%;">
+                قيمة الضريبة<br>
+                Tax Amount
+            </th>
+            <th style="width: 12%;">
+                المجموع مع الضريبة<br>
+                Total with VAT
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in doc.items %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td class="item-desc">{{ item.item_name }}</td>
+            <td>{{ item.rate }}</td>
+            <td>{{ item.qty }}</td>
+            <td>{{ item.base_amount }}</td>
+            <td>{{ item.tax_rate }}</td>
+            <td>{{ item.tax_amount }}</td>
+            <td>{{ item.total_amount }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- QR Code + Totals -->
+<div class="bottom-section">
+    <table>
+        <tr>
+            <td class="qr-cell">
+                <img src="data:image/png;base64, {{ get_zatca_phase_1_qr_for_invoice(doc.name) }}">
+            </td>
+            <td class="totals-cell">
+                <table class="totals-table">
+                    <thead>
+                        <tr>
+                            <th colspan="3">
+                                <span style="float: left;">Total Amount</span>
+                                <span style="float: right;">المبلغ الإجمالى</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="label-en">Total (Excluding VAT):</td>
+                            <td class="amount">{{ doc.total }}</td>
+                            <td class="label-ar">الإجمالي (باستثناء الضريبة):</td>
+                        </tr>
+                        <tr>
+                            <td class="label-en">Total VAT:</td>
+                            <td class="amount">{{ doc.total_taxes_and_charges }}</td>
+                            <td class="label-ar">إجمالي ضريبة القيمة المضافة:</td>
+                        </tr>
+                        <tr>
+                            <td class="label-en">Total Amount Due (Including VAT):</td>
+                            <td class="amount">{{ doc.grand_total }}</td>
+                            <td class="label-ar">إجمالي المبلغ المستحق (شامل الضريبة):</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- Terms and Conditions -->
+<table class="terms-table">
+    <thead>
+        <tr>
+            <th>Terms and Conditions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ doc.terms or "None" }}</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Signatures -->
+<div class="signature-section">
+    <table>
+        <tr>
+            <td style="text-align: left;">توقيع العميل</td>
+            <td style="text-align: right;">توقيع السائق</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

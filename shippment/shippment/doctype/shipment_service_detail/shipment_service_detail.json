@@ -1,0 +1,47 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-11-09 13:33:06.240232",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "shipment_service",
+  "column_break_oyed",
+  "service_attachment"
+ ],
+ "fields": [
+  {
+   "fieldname": "column_break_oyed",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "shipment_service",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Shipment Service",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "service_attachment",
+   "fieldtype": "Attach",
+   "in_list_view": 1,
+   "label": "Attachment"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-11-09 13:34:45.484477",
+ "modified_by": "Administrator",
+ "module": "shippment",
+ "name": "Shipment Service Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
