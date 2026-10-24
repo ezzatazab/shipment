@@ -30,6 +30,15 @@ frappe.ui.form.on("Customs Shipment", {
             };
         });
 
+        frm.set_query("shipping_agent", function () {
+            return {
+                query: "shippment.shippment.doctype.customs_shipment.customs_shipment.get_shipping_agents",
+                filters: {
+                    shipping_line: frm.doc.shipping_line || ""
+                }
+            };
+        });
+
         frm.set_query("port_location", function () {
             return {
                 filters: {
@@ -64,6 +73,44 @@ frappe.ui.form.on("Customs Shipment", {
                     docstatus: ['!=', 2]
                 }
             };
+        });
+    },
+
+    shipping_line: function (frm) {
+        if (!frm.doc.shipping_line) {
+            frm.set_value("bl_prefix", "");
+            frm.set_value("shipping_agent", "");
+            return;
+        }
+
+        frappe.db.get_value("Shipping Line", frm.doc.shipping_line, "bl_prefix").then((r) => {
+            frm.set_value("bl_prefix", (r.message && r.message.bl_prefix) || "");
+        });
+
+        frappe.call({
+            method: "shippment.shippment.doctype.customs_shipment.customs_shipment.get_shipping_line_agents",
+            args: {
+                shipping_line: frm.doc.shipping_line
+            },
+            callback: function (r) {
+                const names = (r.message || []).map((row) => row.name);
+                if (names.length === 1) {
+                    frm.set_value("shipping_agent", names[0]);
+                } else if (frm.doc.shipping_agent && !names.includes(frm.doc.shipping_agent)) {
+                    frm.set_value("shipping_agent", "");
+                }
+            }
+        });
+    },
+
+    shipping_agent: function (frm) {
+        if (!frm.doc.shipping_agent) {
+            frm.set_value("agent_prefix", "");
+            return;
+        }
+
+        frappe.db.get_value("Shipping Agent", frm.doc.shipping_agent, "agent_prefix").then((r) => {
+            frm.set_value("agent_prefix", (r.message && r.message.agent_prefix) || "");
         });
     },
 
@@ -458,6 +505,7 @@ function apply_status_background(frm) {
 
     const status_colors = {
         "New": "#dbeafe",                     // blue
+        "مسودة": "#dbeafe",                   // light blue
         "Submission": "#ede9fe",              // purple
         "Inspection and Examination": "#ffedd5", // orange
         "Special Sections": "#fee2e2",        // red

@@ -19,6 +19,10 @@
   "policy_number",
   "policy_date",
   "agent_name",
+  "shipping_line",
+  "bl_prefix",
+  "shipping_agent",
+  "agent_prefix",
   "column_break_5",
   "naming_series",
   "status",
@@ -166,6 +170,34 @@
    "fieldname": "agent_name",
    "fieldtype": "Data",
    "label": "Agent Name"
+  },
+  {
+   "fieldname": "shipping_line",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Shipping Line",
+   "options": "Shipping Line"
+  },
+  {
+   "fetch_from": "shipping_line.bl_prefix",
+   "fieldname": "bl_prefix",
+   "fieldtype": "Data",
+   "label": "Bill of Lading Abbreviation / Prefix",
+   "read_only": 1
+  },
+  {
+   "fieldname": "shipping_agent",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Shipping Agent",
+   "options": "Shipping Agent"
+  },
+  {
+   "fetch_from": "shipping_agent.agent_prefix",
+   "fieldname": "agent_prefix",
+   "fieldtype": "Data",
+   "label": "Agent Prefix",
+   "read_only": 1
   },
   {
    "depends_on": "eval:doc.shipping_type == \"Sea Freight\";",
@@ -392,7 +424,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 25,
- "modified": "2026-08-04 23:56:45.306961",
+ "modified": "2026-10-24 23:26:00.000000",
  "modified_by": "Administrator",
  "module": "shippment",
  "name": "Customs Shipment",
@@ -410,10 +442,18 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Customer",
+   "write": 1
   }
  ],
  "row_format": "Dynamic",
- "search_fields": "customer",
+ "search_fields": "customer,shipping_line,shipping_agent",
  "show_name_in_global_search": 1,
  "show_title_field_in_link": 1,
  "sort_field": "modified",

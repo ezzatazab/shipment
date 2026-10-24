@@ -265,6 +265,27 @@ doc_events = {
 
 
 
+standard_portal_menu_items = [
+	{
+		"title": "Customs Shipments",
+		"route": "/customs-shipments",
+		"reference_doctype": "Customs Shipment",
+		"role": "Customer",
+	}
+]
+
+has_website_permission = {
+	"Customs Shipment": "shippment.shippment.doctype.customs_shipment.customs_shipment.has_website_permission",
+}
+
+permission_query_conditions = {
+	"Customs Shipment": "shippment.shippment.doctype.customs_shipment.customs_shipment.get_permission_query_conditions",
+}
+
+has_permission = {
+	"Customs Shipment": "shippment.shippment.doctype.customs_shipment.customs_shipment.has_permission",
+}
+
 fixtures = [
     "Ports",
     "Shipment Status",

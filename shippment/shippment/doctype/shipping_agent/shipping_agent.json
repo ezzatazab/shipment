@@ -1,0 +1,178 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-10-24 22:09:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "basic_info",
+  "naming_series",
+  "agent_name",
+  "agent_type",
+  "column_break0",
+  "tax_id",
+  "agent_prefix",
+  "disabled",
+  "shipping_lines_section",
+  "shipping_lines",
+  "contact_section",
+  "mobile_nos",
+  "column_break_contact",
+  "emails",
+  "primary_section",
+  "primary_mobile",
+  "column_break_primary",
+  "primary_email"
+ ],
+ "fields": [
+  {
+   "fieldname": "basic_info",
+   "fieldtype": "Section Break",
+   "label": "Basic Info"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "no_copy": 1,
+   "options": "SA-.####",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "agent_name",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Agent Name",
+   "reqd": 1
+  },
+  {
+   "default": "Company",
+   "fieldname": "agent_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Agent Type",
+   "options": "Company\nIndividual",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tax_id",
+   "fieldtype": "Data",
+   "label": "Tax ID"
+  },
+  {
+   "fieldname": "agent_prefix",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Prefix"
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
+  },
+  {
+   "fieldname": "shipping_lines_section",
+   "fieldtype": "Section Break",
+   "label": "Shipping Lines"
+  },
+  {
+   "fieldname": "shipping_lines",
+   "fieldtype": "Table",
+   "label": "Shipping Lines",
+   "options": "Shipping Agent Line"
+  },
+  {
+   "fieldname": "contact_section",
+   "fieldtype": "Section Break",
+   "label": "Contact"
+  },
+  {
+   "fieldname": "mobile_nos",
+   "fieldtype": "Table",
+   "label": "Mobile Numbers",
+   "options": "Shipping Agent Mobile"
+  },
+  {
+   "fieldname": "column_break_contact",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "emails",
+   "fieldtype": "Table",
+   "label": "Emails",
+   "options": "Shipping Agent Email"
+  },
+  {
+   "fieldname": "primary_section",
+   "fieldtype": "Section Break",
+   "label": "Primary Contact"
+  },
+  {
+   "fieldname": "primary_mobile",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Primary Mobile",
+   "options": "Phone",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_primary",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "primary_email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Primary Email",
+   "options": "Email",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-24 23:26:00",
+ "modified_by": "Administrator",
+ "module": "shippment",
+ "name": "Shipping Agent",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Customer"
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "agent_name,agent_prefix,primary_mobile,primary_email",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "agent_name",
+ "track_changes": 1
+}

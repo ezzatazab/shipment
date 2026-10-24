@@ -4,7 +4,7 @@
 import frappe
 import re
 from frappe import _
-from frappe.utils import now_datetime, flt, get_link_to_form
+from frappe.utils import now_datetime, flt, get_link_to_form, today
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.document import Document
 
@@ -18,9 +18,64 @@ class CustomsShipment(Document):
 					"shipment_mission": shipment_mission
 				})
 
+	def before_insert(self):
+		self.apply_customer_portal_defaults()
+
 	def validate(self):
+		self.apply_customer_portal_defaults()
+		self.set_shipping_line_details()
 		self.validate_vessel_no()
 		self.track_status_change()
+
+	def set_shipping_line_details(self):
+		if not self.shipping_line:
+			self.bl_prefix = None
+		else:
+			self.bl_prefix = frappe.db.get_value("Shipping Line", self.shipping_line, "bl_prefix")
+			agents = [row.name for row in get_agents_for_shipping_line(self.shipping_line)]
+			if self.shipping_agent and self.shipping_agent not in agents:
+				frappe.throw(
+					_("Shipping Agent {0} does not handle Shipping Line {1}").format(
+						self.shipping_agent, self.shipping_line
+					)
+				)
+			if not self.shipping_agent and len(agents) == 1:
+				self.shipping_agent = agents[0]
+
+		if self.shipping_agent:
+			self.agent_prefix = frappe.db.get_value("Shipping Agent", self.shipping_agent, "agent_prefix")
+		else:
+			self.agent_prefix = None
+
+	def apply_customer_portal_defaults(self):
+		if not _is_customer_portal_user():
+			return
+
+		customers = get_portal_customers(frappe.session.user)
+		if not customers:
+			frappe.throw(_("Your user is not linked to a Customer"))
+
+		if not self.customer or self.customer not in customers:
+			self.customer = customers[0]
+
+		self.customer_name = frappe.db.get_value("Customer", self.customer, "customer_name")
+
+		if self.is_new():
+			if not self.naming_series:
+				self.naming_series = "SHPT-.####"
+			if not self.date:
+				self.date = today()
+			if not self.status:
+				self.status = get_portal_status()
+			return
+
+		previous = frappe.db.get_value(self.doctype, self.name, ["customer", "status"], as_dict=True)
+		if not previous:
+			return
+		if self.customer != previous.customer:
+			frappe.throw(_("You cannot change the customer on this shipment"))
+		if self.status != previous.status:
+			self.status = previous.status
 		
 	def track_status_change(self):
 		# Get the previous status from the database
@@ -73,6 +128,162 @@ class CustomsShipment(Document):
 					  "Current: {1} letters and {2} numbers").format(vessel.vessel_no, letters, numbers),
 					title=_("Invalid Vessel Number Format")
 				)
+
+
+def get_list_context(context=None):
+	return {
+		"title": _("Customs Shipments"),
+		"get_list": get_customs_shipment_list,
+		"show_sidebar": True,
+		"show_search": True,
+		"no_breadcrumbs": True,
+	}
+
+
+def get_customs_shipment_list(doctype, txt, filters, limit_start, limit_page_length=20, order_by=None):
+	from frappe.www.list import get_list
+
+	filters = filters or {}
+	if _is_customer_portal_user():
+		customers = get_portal_customers(frappe.session.user)
+		if not customers:
+			return []
+		filters["customer"] = ["in", customers]
+
+	return get_list(
+		doctype,
+		txt,
+		filters,
+		limit_start,
+		limit_page_length,
+		ignore_permissions=False,
+		order_by=order_by,
+	)
+
+
+def has_website_permission(doc, ptype, user, verbose=False):
+	if not _is_customer_portal_user(user):
+		return False
+	return doc.customer in get_portal_customers(user)
+
+
+def has_permission(doc, ptype="read", user=None, debug=False):
+	user = user or frappe.session.user
+	if not _is_customer_portal_user(user):
+		return None
+	if ptype == "create" and not doc.get("customer"):
+		return None
+	if doc.get("customer") in get_portal_customers(user):
+		return None
+	return False
+
+
+def get_permission_query_conditions(user, doctype=None):
+	if not _is_customer_portal_user(user):
+		return ""
+
+	customers = get_portal_customers(user)
+	if not customers:
+		return "1=0"
+
+	escaped = ", ".join(frappe.db.escape(name) for name in customers)
+	return f"`tabCustoms Shipment`.`customer` in ({escaped})"
+
+
+def get_portal_customers(user):
+	customers = frappe.db.sql_list(
+		"""select parent from `tabPortal User`
+		where user=%s and parenttype='Customer'""",
+		user,
+	)
+	if customers:
+		return customers
+
+	contact = frappe.db.get_value("Contact", {"user": user}, "name")
+	if not contact:
+		return []
+
+	linked = frappe.db.get_value(
+		"Dynamic Link",
+		{"parenttype": "Contact", "parent": contact, "link_doctype": "Customer"},
+		"link_name",
+	)
+	return [linked] if linked else []
+
+
+def get_agents_for_shipping_line(shipping_line):
+	if not shipping_line:
+		return []
+
+	return frappe.db.sql(
+		"""
+		select sa.name, sa.agent_name
+		from `tabShipping Agent` sa
+		inner join `tabShipping Agent Line` sal
+			on sal.parent = sa.name and sal.parenttype = 'Shipping Agent'
+		where sal.shipping_line = %s and ifnull(sa.disabled, 0) = 0
+		group by sa.name, sa.agent_name
+		order by sa.agent_name
+		""",
+		shipping_line,
+		as_dict=True,
+	)
+
+
+@frappe.whitelist()
+def get_shipping_line_agents(shipping_line):
+	return get_agents_for_shipping_line(shipping_line)
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_shipping_agents(doctype, txt, searchfield, start, page_len, filters):
+	shipping_line = (filters or {}).get("shipping_line")
+	conditions = ["ifnull(sa.disabled, 0) = 0"]
+	values = {
+		"txt": f"%{txt}%",
+		"start": start,
+		"page_len": page_len,
+	}
+	if shipping_line:
+		conditions.append(
+			"""exists (
+				select 1 from `tabShipping Agent Line` sal
+				where sal.parent = sa.name
+					and sal.parenttype = 'Shipping Agent'
+					and sal.shipping_line = %(shipping_line)s
+			)"""
+		)
+		values["shipping_line"] = shipping_line
+
+	return frappe.db.sql(
+		f"""
+		select sa.name, sa.agent_name
+		from `tabShipping Agent` sa
+		where {" and ".join(conditions)}
+			and (sa.name like %(txt)s or ifnull(sa.agent_name, '') like %(txt)s)
+		order by sa.agent_name
+		limit %(start)s, %(page_len)s
+		""",
+		values,
+	)
+
+
+def get_portal_status():
+	for status in ("مسودة", "New"):
+		if frappe.db.exists("Shipping Status", status):
+			return status
+	frappe.throw(_("Shipping Status is not configured"))
+
+
+def _is_customer_portal_user(user=None):
+	user = user or frappe.session.user
+	if user in ("Guest", "Administrator"):
+		return False
+	roles = set(frappe.get_roles(user))
+	if "System Manager" in roles:
+		return False
+	return "Customer" in roles
 
 
 @frappe.whitelist()

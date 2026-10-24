@@ -1,0 +1,43 @@
+{
+ "actions": [],
+ "creation": "2026-10-24 22:29:00",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "shipping_line",
+  "bl_prefix"
+ ],
+ "fields": [
+  {
+   "fieldname": "shipping_line",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Shipping Line",
+   "options": "Shipping Line",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "shipping_line.bl_prefix",
+   "fieldname": "bl_prefix",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Bill of Lading Abbreviation / Prefix",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-24 23:05:00",
+ "modified_by": "Administrator",
+ "module": "shippment",
+ "name": "Shipping Agent Line",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

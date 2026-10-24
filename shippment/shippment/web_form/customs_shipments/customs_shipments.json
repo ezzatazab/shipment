@@ -1,0 +1,213 @@
+{
+ "allow_comments": 0,
+ "allow_delete": 0,
+ "allow_edit": 0,
+ "allow_incomplete": 0,
+ "allow_multiple": 1,
+ "allow_print": 0,
+ "anonymous": 0,
+ "apply_document_permissions": 1,
+ "button_label": "Submit",
+ "client_script": "",
+ "condition_json": "[]",
+ "creation": "2026-10-24 22:17:00",
+ "custom_css": "",
+ "doc_type": "Customs Shipment",
+ "docstatus": 0,
+ "doctype": "Web Form",
+ "introduction_text": "",
+ "is_standard": 1,
+ "list_columns": [
+  {
+   "fieldname": "name",
+   "fieldtype": "Data",
+   "label": "ID"
+  },
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Link",
+   "label": "Status",
+   "options": "Shipping Status"
+  },
+  {
+   "fieldname": "policy_number",
+   "fieldtype": "Data",
+   "label": "Policy Number"
+  },
+  {
+   "fieldname": "port",
+   "fieldtype": "Link",
+   "label": "Port",
+   "options": "Ports"
+  }
+ ],
+ "list_title": "Customs Shipments",
+ "login_required": 1,
+ "max_attachment_size": 0,
+ "modified": "2026-10-24 23:26:00",
+ "modified_by": "Administrator",
+ "module": "shippment",
+ "name": "customs-shipments",
+ "owner": "Administrator",
+ "published": 1,
+ "route": "customs-shipments",
+ "show_attachments": 0,
+ "show_list": 1,
+ "show_sidebar": 1,
+ "success_message": "Your customs shipment has been submitted.",
+ "success_title": "Submitted",
+ "success_url": "/customs-shipments",
+ "title": "Customs Shipment",
+ "web_form_fields": [
+  {
+   "allow_read_on_all_link_options": 1,
+   "fieldname": "type_of_shipping",
+   "fieldtype": "Link",
+   "hidden": 0,
+   "label": "Type of Shipping",
+   "options": "Type of Shipping",
+   "read_only": 0,
+   "reqd": 1,
+   "show_in_filter": 1
+  },
+  {
+   "allow_read_on_all_link_options": 1,
+   "fieldname": "port",
+   "fieldtype": "Link",
+   "hidden": 0,
+   "label": "Port",
+   "options": "Ports",
+   "read_only": 0,
+   "reqd": 1,
+   "show_in_filter": 1
+  },
+  {
+   "fieldname": "column_break_portal",
+   "fieldtype": "Column Break",
+   "hidden": 0,
+   "read_only": 0,
+   "reqd": 0,
+   "show_in_filter": 0
+  },
+  {
+   "fieldname": "policy_number",
+   "fieldtype": "Data",
+   "hidden": 0,
+   "label": "Policy Number",
+   "read_only": 0,
+   "reqd": 1,
+   "show_in_filter": 1
+  },
+  {
+   "fieldname": "policy_date",
+   "fieldtype": "Date",
+   "hidden": 0,
+   "label": "Policy Date",
+   "read_only": 0,
+   "reqd": 0,
+   "show_in_filter": 0
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "hidden": 0,
+   "label": "Date",
+   "read_only": 0,
+   "reqd": 1,
+   "show_in_filter": 0
+  },
+  {
+   "fieldname": "expected_arrival_date",
+   "fieldtype": "Date",
+   "hidden": 0,
+   "label": "Expected Arrival Date",
+   "read_only": 0,
+   "reqd": 0,
+   "show_in_filter": 0
+  },
+  {
+   "fieldname": "section_break_portal",
+   "fieldtype": "Section Break",
+   "hidden": 0,
+   "label": "Shipment",
+   "read_only": 0,
+   "reqd": 0,
+   "show_in_filter": 0
+  },
+  {
+   "fieldname": "shipment_type",
+   "fieldtype": "Select",
+   "hidden": 0,
+   "label": "Shipment Type",
+   "options": "\nTruck\nContainer\nParcel",
+   "read_only": 0,
+   "reqd": 0,
+   "show_in_filter": 0
+  },
+  {
+   "allow_read_on_all_link_options": 1,
+   "fieldname": "shipping_line",
+   "fieldtype": "Link",
+   "hidden": 0,
+   "label": "Shipping Line",
+   "options": "Shipping Line",
+   "read_only": 0,
+   "reqd": 0,
+   "show_in_filter": 0
+  },
+  {
+   "fieldname": "bl_prefix",
+   "fieldtype": "Data",
+   "hidden": 0,
+   "label": "Bill of Lading Abbreviation / Prefix",
+   "read_only": 1,
+   "reqd": 0,
+   "show_in_filter": 0
+  },
+  {
+   "allow_read_on_all_link_options": 1,
+   "fieldname": "shipping_agent",
+   "fieldtype": "Link",
+   "hidden": 0,
+   "label": "Shipping Agent",
+   "options": "Shipping Agent",
+   "read_only": 0,
+   "reqd": 0,
+   "show_in_filter": 0
+  },
+  {
+   "fieldname": "agent_prefix",
+   "fieldtype": "Data",
+   "hidden": 0,
+   "label": "Agent Prefix",
+   "read_only": 1,
+   "reqd": 0,
+   "show_in_filter": 0
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "hidden": 0,
+   "label": "Remarks",
+   "read_only": 0,
+   "reqd": 0,
+   "show_in_filter": 0
+  },
+  {
+   "default": "SHPT-.####",
+   "fieldname": "naming_series",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Series",
+   "read_only": 1,
+   "reqd": 0,
+   "show_in_filter": 0
+  }
+ ]
+}

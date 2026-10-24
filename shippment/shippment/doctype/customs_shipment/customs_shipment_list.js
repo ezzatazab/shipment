@@ -21,6 +21,10 @@ frappe.listview_settings['Customs Shipment'] = {
                 label: __("New"),
                 color: "blue"
             },
+            "مسودة": {
+                label: "مسودة",
+                color: "blue"
+            },
             "Transaction Submitted": {
                 label: __("Transaction Submitted"),
                 color: "purple"
